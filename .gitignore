@@ -1,1 +1,12 @@
 .DS_Store
+_obj
+_test
+_testmain.go
+
+/VERSION.cache
+/bin/
+/pkg/
+/go-burger/src/github.com/
+/go-burger/src/gopkg.in/
+/goinstall.log
+.exec
