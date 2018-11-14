@@ -40,6 +40,7 @@ func NewServerConfiguration() *negroni.Negroni {
 func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.HandleFunc("/ping", pingHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/restaurant", addRestaurantHandler(formatter)).Methods("POST")
+	mx.HandleFunc("/restaurant/zipcode/{zipcode}", addRestaurantHandler(formatter)).Methods("GET")
 }
 
 // Handler for API Ping
@@ -71,6 +72,34 @@ func addRestaurantHandler(formatter *render.Render) http.HandlerFunc {
 		res.RestaurantId = uuidForRestaurant.String()
 		fmt.Println("Restuanats: ", res)
 		err = c.Insert(res)
+		if err != nil {
+			log.Fatal(err)
+		}
+		formatter.JSON(w, http.StatusOK, res)
+	}
+}
+
+/*
+Handler method for getting restaurant based on a ziplocation
+*/
+func getRestaurantHandler(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		session, err := mgo.Dial(mongodb_server)
+		if err != nil {
+			panic(err)
+		}
+		defer session.Close()
+		session.SetMode(mgo.Monotonic, true)
+		c := session.DB(mongodb_database).C(mongodb_collection)
+
+		params := mux.Vars(req)
+		var zipcode string = params["zipcode"]
+		
+		var res bson.M
+        err = c.Find(bson.M{"zipcode" : zipcode}).One(&res)
+		
 		if err != nil {
 			log.Fatal(err)
 		}
