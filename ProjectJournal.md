@@ -42,7 +42,9 @@ References link-
 
   Avaialable at - http://basho.com/posts/technical/relational-to-riak-part-1-high-availability/
 
+## Challenges
 
+None faced
 
 # Week 2 (10/14/2018) to (10/20/2018)
 
@@ -79,9 +81,10 @@ Sarding stratergy
 
 **AWS Mongo Setup**
 
-Step 1: Launch Private EC2 Free-Tier Instance
-​    
-    	Name: 			 node1
+**Step 1: Launch Private EC2 Free-Tier Instance**
+
+```
+Name: 			 node1
     	AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
     	Instance Type:   t2.micro
     	VPC:             cmpe281
@@ -90,9 +93,9 @@ Step 1: Launch Private EC2 Free-Tier Instance
     	Security Group:  mongodb-cluster 
     	SG Open Ports:   22, 27017
     	Key Pair:        cmpe281-us-west-1
+```
 
-
-Step 2: Launch Public EC2 Free-Tier Instance for Jumpbox
+**Step 2: Launch Public EC2 Free-Tier Instance for Jumpbox**
 
 		Name: 			 Jumpbox
 		AMI:             Ubuntu Server 16.04 LTS (HVM)
@@ -104,7 +107,7 @@ Step 2: Launch Public EC2 Free-Tier Instance for Jumpbox
 		SG Open Ports:   22
 		Key Pair:        cmpe281-us-west-1
 
-Step 3: Install mongodb in the private instance using Jumbox
+**Step 3: Install mongodb in the private instance using Jumbox**
 
 ```
 1) Login to Jumbox ec2-isntance by -
@@ -155,7 +158,7 @@ Step 3: Install mongodb in the private instance using Jumbox
 			replication:
 		    	replSetName: cmpe281
 
-	6) Create mongod.service
+6) Create mongod.service
 
 		sudo vi /etc/systemd/system/mongod.service
 
@@ -170,14 +173,31 @@ Step 3: Install mongodb in the private instance using Jumbox
 		[Install]
 		    WantedBy=multi-user.target
 
-	7) Enable Mongo Service
+7) Enable Mongo Service
 		sudo systemctl enable mongod.service
 
-	8) Restart MongoDB to apply our changes
+8) Restart MongoDB to apply our changes
 		sudo service mongod restart
 		sudo service mongod status
 ```
 
+
+
+## Challenges
+
+None faced 
+
+## Mistakes
+
+1) Mongo shell was not not running - 
+
+When you do mongo after installing and starting mongodb, then it gives an error - Connection Refused.
+
+**Solution**- 
+
+* Check whether your mongod service is up or not by - ```sudo service mongod status ``` If the service is up and running it will give actively running
+
+* Check for mongod.service and mongod.conf parameters. Check for the name and indentations in the files
 
 
 # Week 3 (10/21/2018) to (10/27/2018)
@@ -192,12 +212,12 @@ Step 3: Install mongodb in the private instance using Jumbox
 
 ## Status
 
-Now that as we have our Mongo setup for one node is done we will create other Nodes for replication
+Now that as we have our Mongo setup for one node is done we will create other Nodes for replication and to test the CP properties for Mongo
 
-Step 4: Create AMI of the priavte EC2 instance
+**Step 4: Create AMI of the priavte EC2 instance**
 ​	Now we have the private instance with all the mongo DB setup done we will now create the AMI to   create other 4 clusters.
 
-Step 5: Launch new Instances using the AMI created		
+**Step 5: Launch new Instances using the AMI created**		
 
 ```
 		1) go to launch ec2 isntance
@@ -221,15 +241,16 @@ Step 5: Launch new Instances using the AMI created
 			Key Pair:        cmpe281-us-west-1
 ```
 
-Step 6: Replace Host Names with Public IP or DNS Names.
+**Step 6: Replace Host Names with Public IP or DNS Names.**
 
-			10.0.1.163 primary
-			10.0.1.73 secondary1
-			10.0.1.109 secondary2
-			10.0.3.191 secondary3
-			10.0.3.107 secondary4
+	        sudo vi /etc/hosts   
+	            10.0.1.163 primary
+	            10.0.1.73 secondary1
+	            10.0.1.109 secondary2
+	            10.0.3.191 secondary3
+	            10.0.3.107 secondary4
 
-Step 7: Intializing the replica set
+**Step 7: Intializing the replica set**
 
 			Go to one of your private mongodb instance and make a replica set there
 	
@@ -248,8 +269,7 @@ Step 7: Intializing the replica set
 			       ]
 			    })
 
-
-Step 8: Insert data into the monog using primary 
+**Step 8: Insert data into the monog using primary** 
 
 		1) Create user
 			Create an admin user to access the database.
@@ -270,14 +290,175 @@ Step 8: Insert data into the monog using primary
 	
 		2) Login to Primary as Admin:
 			mongo -u admin -p cmpe281 --authenticationDatabase admin
+			
+			#Create database burger and collection restaurant
 			use burger;
 		
 			db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
 	
 			db.restaurant.find({}).pretty()
 			
+			#This further insertions will be used for testing
 			db.restaurant.insert({"id": "3","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
 	
 			db.restaurant.insert({"id": "4","restaurantName": "Milli Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
 
-  		
+  
+
+## Challenges
+
+None Faced
+
+## Mistakes
+
+1) Hostname is not getting set in the /etc/hosts file
+**Solution**- I fixed this problem by doing reboot on the instense
+
+2) Replicas initiation was giving error as connection refused
+
+I was getting the below error while initiating the replica set for mongodb​	
+
+```
+rs.initiate( {
+        _id : "cmpe281",
+        members: [
+           { _id: 0, host: "primary:27017" },
+           { _id: 1, host: "secondary1:27017" },
+           { _id: 2, host: "secondary2:27017" },
+           { _id: 3, host: "secondary3:27017" },
+           { _id: 4, host: "secondary4:27017" }
+        ]
+     })
+{
+	"ok" : 0,
+	"errmsg" : "replSetInitiate quorum check failed because not all proposed set members responded affirmatively: secondary1:27017 failed with Error connecting to secondary1:27017 (10.0.1.73:27017) :: caused by :: Connection refused, secondary2:27017 failed with Error connecting to secondary2:27017 (10.0.1.109:27017) :: caused by :: Connection refused, secondary3:27017 failed with Error connecting to secondary3:27017 (10.0.3.191:27017) :: caused by :: Connection refused, secondary4:27017 failed with Error connecting to secondary4:27017 (10.0.3.107:27017) :: caused by :: Connection refused",
+	"code" : 74,
+	"codeName" : "NodeNotFound"
+}	
+```
+
+
+
+**Solution**- Jumpbox into each of your MongoDB instances(i.e primary and all secondary) and make sure that all instances have mongodb service up.
+
+You can start mongodb by - ```sudo service mongod restart```
+
+
+
+# Week 4 (10/28/2018) to (10/03/2018)
+
+**Mongo Week**
+
+## Plan
+
+1) Test for CP properties of Mongodb setup that we have done earlier
+2) Write Test Cases
+
+## Status
+
+Below are the test cases created for the Consistency of MongoDB during Partition Tolerance
+
+- [x] **<u>Test 1 : Replication Test</u>**
+
+  **Test Plan-** Secondary nodes should be able to replicate the data inserted into primary node 
+
+  **Expected Outcome-** Should be able to query secondary nodes and be able to read data from secondary
+
+  **Actual Outcome-** Able to read the data from secondary node showing that replication from Master to slave is working properly.
+
+  **Test Exceution-**
+
+  1. do rs.status() to see which node is primary 
+
+  2. Excecute the command ```mongo``` in your primary node EC2 instance and insert some data in your burger database.
+
+     ```
+     db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
+     ```
+
+  3. Jumpbox into your seconday EC2 instances and then execute below query to see whether you are able to read the previous data you inserted in primary.
+
+     ```
+     db.restaurant.find({}).pretty()
+     ```
+
+- [x] **Test 2 : API test reading and updating data**
+
+  **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
+
+  **Expected Outcome-** Secondary node should be up to date with primary
+
+  **Actual Outcome-** Able to read the data from secondary node showing that replication from Master to slave is working properly.
+
+  **Test Exceution-**
+
+  1. In your primary mongodb node execute the command ```mongo```
+
+  2. Insert more data into your primary
+
+     ```
+     db.restaurant.insert({"id": "2","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+     ```
+
+  3. Excecute the command ```mongo``` in your all secondary nodes EC2 instance and insert some data in your burger database
+
+     You should be able to see both the records being inserted.
+
+     ```
+     db.restaurant.find({}).pretty()
+     ```
+
+
+  - [ ] 
+
+- [x] **Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes**
+
+
+			DROP connection
+			# drop ipaddress
+			sudo iptables -A INPUT -s 10.0.1.163 -j DROP      primary 
+			sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+			sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+			sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+	
+			result- Inserted a new data in primary and the secondary got updated but the one which was disconnected gives the stale data to read
+
+
+
+- [x] **Test 4 Connect the secondary2 again and then disconnect the primary from the 3 secondary mongodb instances**		
+
+			sudo iptables -D INPUT -s 10.0.1.163 -j DROP      primary 
+			sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+			sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+			sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+	
+			dropping-
+	
+			sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+			sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+			sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+	
+			we see that the the secondary4 node has become the primary node now
+
+
+
+- [x] **Test 5 Stop Primary mongodb to show leader selection and recovery**
+
+			connect the disconnect node again to all so that the primary is all setup again
+	
+			sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+			sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+			sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+
+
+			Now stop mongodb service such that the primary is not running again
+			The primary now in the node5 so we stop the node5. The node5 was earlier secondary4
+			sudo service mongod stop
+
+
+## Challenges
+
+
+
+
+
