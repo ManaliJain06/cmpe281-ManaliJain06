@@ -358,7 +358,7 @@ You can start mongodb by - ```sudo service mongod restart```
 
 Below are the test cases created for the Consistency of MongoDB during Partition Tolerance
 
-- [x] **<u>Test 1 : Replication Test</u>**
+- [x] **Test 1 : Replication Test**
 
   **Test Plan-** Secondary nodes should be able to replicate the data inserted into primary node 
 
@@ -368,21 +368,27 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   **Test Exceution-**
 
-  1. do rs.status() to see which node is primary 
+1. do rs.status() to see which node is primary 
 
-  2. Excecute the command ```mongo``` in your primary node EC2 instance and insert some data in your burger database.
+2. Excecute the command ```mongo``` in your primary node EC2 instance and insert some data in your burger database.
 
-     ```
-     db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
-     ```
+   ```
+   db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
+   ```
 
-  3. Jumpbox into your seconday EC2 instances and then execute below query to see whether you are able to read the previous data you inserted in primary.
+3. Jumpbox into your seconday EC2 instances and then execute below query to see whether you are able to read the previous data you inserted in primary.
 
-     ```
-     db.restaurant.find({}).pretty()
-     ```
+   ```
+   db.restaurant.find({}).pretty()
+   ```
 
-- [x] **Test 2 : API test reading and updating data**
+   **Test Result-** 
+
+   Image- 
+
+
+
+- [x] Test 2 : API test reading and updating data**
 
   **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
 
@@ -392,73 +398,227 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   **Test Exceution-**
 
-  1. In your primary mongodb node execute the command ```mongo```
+   1. In your primary mongodb node execute the command ```mongo```
 
-  2. Insert more data into your primary
+   2. Insert more data into your primary.
+
+      ```
+      db.restaurant.insert({"id": "2","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+      ```
+
+   3. Excecute the command ```mongo``` in your all secondary nodes EC2 instance and insert some data in your burger database
+
+      You should be able to see both the records being inserted.
+
+      ```
+      db.restaurant.find({}).pretty()
+      ```
+
+
+  **Test Result-** 
+
+  Image-
+
+
+
+- [ ] 
+
+- [x] **Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes** **and read stale data**
+
+  **Test Plan-** Make a partition tolerance by disconnecting one node(secondary) and observing behavioiur. 
+
+  **Expected Outcome-** When secondary node is disconnected then that disconnected node will have stale data and we should be able to read it
+
+  **Actual Outcome-** Able to read stale data from the secondary disconneced node. Inserted a new data in primary and other secondary nodes got updated but the one which was disconnected gives the stale data to read.
+
+  **Test Exceution-**
+
+1. Go to any of your secondary node Ec2 instance and execute the below commands to disconnect that node from the other nodes (Here I am disconnecting node2)
+
+```
+DROP connection
+	# drop ipaddress
+	sudo iptables -A INPUT -s 10.0.1.163 -j DROP      (primary node)
+	sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+	sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+	sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+```
+
+2. Then insert some data in your primary node
+
+```
+db.restaurant.insert({"id": "3","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+```
+
+3. The login into your disconnected secondary and you will see that we are getting the stale records    and not the currenlty updated one.
+
+```
+db.restaurant.find({}).pretty()
+```
+
+ 4. Login into your secondary mongodb nodes which are not disconnected and you will see that connected secondary nodes are up to date and getting the newly insterted data.
+
+```
+db.restaurant.find({}).pretty()
+```
+
+​       ​     
+
+​	**Test Result-** 
+
+​	Image-
+
+
+
+- [x] **Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances**		
+
+  **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**. 
+
+  **Expected Outcome-** When primary node is disconnected then the new primary must be elected from the other secondary nodes
+
+  **Actual Outcome-** New Primary node is elected from the other secondary nodes and the previous primary node is now secondary.
+
+  **Test Exceution-**
+
+  1. Go to your primary node Ec2 instance and execute the below commands to disconnect that node from the other secondary nodes.
+
+  ```
+  #Disconnecting primary from other 3 secondary
+  
+  		sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+  		sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+  		sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+  ```
+
+  2. Then do ```rs.status()``` and you will see that the node has error message as disconnected as it is disconnected from the netowork
+
+  3. Do ```rs.status()``` in any of the secondary node and you will see that a new primary is elected which was earlier secondary.
+
+  4. You can again connect the disconnecterd nodes by below commands
 
      ```
-     db.restaurant.insert({"id": "2","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+           sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+     	  sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+     	  sudo iptables -D INPUT -s 10.0.3.191 -j DROP
      ```
 
-  3. Excecute the command ```mongo``` in your all secondary nodes EC2 instance and insert some data in your burger database
 
-     You should be able to see both the records being inserted.
+
+  **Test Result-** 
+
+  Image-
+
+
+- [x] **Test 5 Stop Primary mongodb to show leader selection and recovery**
+
+  This test is in continuation of the Test4
+
+  **Test Plan-** Observer **partition recovery**
+
+  **Expected Outcome-** When the disconnected node is connected again then it will try to sync up with the network and get the new records or changes being done during partition tolerance
+
+  **Actual Outcome-** Node after connection is working as per other secondary nodes with latest recrords being udpdated.
+
+  **Test Exceution-**
+
+  1. Go to the node that you disconnected in the Test4 and run below commands to connect it back to the network.
+
+     ```
+     sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+     sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+     sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+     ```
+
+  2. Then do ```rs.status``` and see that the node is live again the network and sending heartbeats
+
+  3. Run the below commands in Mongo shell to see the upadted records being fetched.
 
      ```
      db.restaurant.find({}).pretty()
      ```
 
 
-  - [ ] 
-
-- [x] **Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes**
-
-
-			DROP connection
-			# drop ipaddress
-			sudo iptables -A INPUT -s 10.0.1.163 -j DROP      primary 
-			sudo iptables -A INPUT -s 10.0.1.109 -j DROP
-			sudo iptables -A INPUT -s 10.0.3.107 -j DROP
-			sudo iptables -A INPUT -s 10.0.3.191 -j DROP
-	
-			result- Inserted a new data in primary and the secondary got updated but the one which was disconnected gives the stale data to read
-
-
-
-- [x] **Test 4 Connect the secondary2 again and then disconnect the primary from the 3 secondary mongodb instances**		
-
-			sudo iptables -D INPUT -s 10.0.1.163 -j DROP      primary 
-			sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-			sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-			sudo iptables -D INPUT -s 10.0.3.191 -j DROP
-	
-			dropping-
-	
-			sudo iptables -A INPUT -s 10.0.1.109 -j DROP
-			sudo iptables -A INPUT -s 10.0.3.107 -j DROP
-			sudo iptables -A INPUT -s 10.0.3.191 -j DROP
-	
-			we see that the the secondary4 node has become the primary node now
-
-
-
-- [x] **Test 5 Stop Primary mongodb to show leader selection and recovery**
-
-			connect the disconnect node again to all so that the primary is all setup again
-	
-			sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-			sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-			sudo iptables -D INPUT -s 10.0.3.191 -j DROP
-
-
-			Now stop mongodb service such that the primary is not running again
-			The primary now in the node5 so we stop the node5. The node5 was earlier secondary4
-			sudo service mongod stop
-
 
 ## Challenges
 
+1) MongoDB was not allowing to read from secondary nodes when you do ```db.restaurant.find({}).pretty()``` and giving error as ''not master and slaveOk=false"
+
+**Solution**- use this command ```rs.slaveOk()``` to set tell mongo shell that you want to read from the secondary nodes and are allowing reads.
 
 
 
+# Week 5 (11/04/2018) to (11/10/2018)
+
+**MongoDB Sharding Week**
+
+## Plan
+
+1) Configure MongoDB to support two data shards
+
+2) Design for MongoDB sharding
+
+3) Using MongoDB Bios Collection demonstrate sharding and select a shard key
+
+
+
+## Status
+
+Sharding steps
+
+1. **Setting up Config servers**
+
+**Step1- First launch 3 EC2 isntancefrom the Mongodb AMI we had created earlier**
+
+1. ```
+     For each of the config server ubuntu instance do the following (using Command or      Configuration)
+   
+      1) Using commands-
+    
+      		mongod --configsvr --replSet cmpe281 --dbpath /var/lib/mongodb --port 27017. --logpoath /var/log/mongodb/mongod.log
+   
+      		ps -aux | grep mongod   // to see the mongod service running
+   
+      2) By configuration parameters-
+   
+   	   # change the configuration parameters by
+   	   sudo vi /etc/mongod.conf
+   	   
+   	   	1) net:
+   	   			port: 27019
+   	   
+   	   	2) replication 
+   	   			replSetname: cmpe281
+   
+   	   	3) Sharding
+   	   			clusterRole: configsvr
+   
+   	   # make the host file changes
+   		 sudo vi /etc/hosts  
+   			<your public IP of the instance> host name
+   			E.g.
+   			54.183.98.65 configServer1
+   			54.241.174.222 configServer2
+   			54.183.90.178 configServer3
+   ```
+
+
+
+**Step2- Now connect the mongo shell to one of the config server members by specifying the port number**
+
+1. 		Enable Mongo Service
+   			sudo systemctl enable mongod.service
+   	
+   		Restart MongoDB to apply our changes
+   			sudo service mongod restart
+   			sudo service mongod status
+   	
+   		Login to Mongo 
+   			mongo -port 27019
+
+
+**Step3- Now inititalize the replia set for the config servers**
+
+1. 		rs.initiate( {_id : "cmpe281",configsvr: true,members: [{ _id: 0, host: "configServer1:27019" },{ _id: 1, host: "configServer2:27019" },{ _id: 2, host: "configServer3:27019" }]})
+   	
+   		rs.status()   // this will show you the status of the nodes
 
