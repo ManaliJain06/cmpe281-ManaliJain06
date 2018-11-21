@@ -50,7 +50,7 @@ None faced
 
 **Mongo Week**
 
-##Plan 
+## Plan
 1) Research on sharding for MongoDB
 
 2) Design for MongoDB replication
@@ -111,21 +111,22 @@ Name: 			 node1
 
 ```
 1) Login to Jumbox ec2-isntance by -
-	ssh -i "cmpe281-us-west-1.pem" ubuntu@<jumpbox public IP or public DNS> using your AWS 	    pem file
-	e.g ssh -i "cmpe281-us-west-1.pem" ubuntu@ec2-13-57-31-201.us-west-		1.compute.amazonaws.com
+ssh -i "cmpe281-us-west-1.pem" ubuntu@<jumpbox public IP or public DNS> using your AWS pem file.
+e.g ssh -i "cmpe281-us-west-1.pem" ubuntu@ec2-13-57-31-201.us-west-		1.compute.amazonaws.com
 
-2) Now to login to your private EC2 to install mongo on it we need to transfer the pem 		file from your local onto the jumbox to use it to 	login to node1 ec2 isntance
-	Open a new terminal then do - scp -i cmpe281-us-west-1.pem <pem file to transfer> 		ubuntu@<public IP for jumbox>:/tmp
-	
-	Now your file is being tranferred to the Jumbox temp folder. Use that file to login to 	   the private node1 isntance by doing ssh 
+2) Now to login to your private EC2 to install mongo on it we need to transfer the pem file from your local onto the jumbox to use it to 	login to node1 ec2 isntance
+Open a new terminal then do - 
+scp -i cmpe281-us-west-1.pem <pem file to transfer> 	ubuntu@<public IP for jumbox>:/tmp
+
+Now your file is being tranferred to the Jumbox temp folder. Use that file to login to the private node1 isntance by doing ssh 
 
 3) Install mongoDB on ubuntu
-	sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 					9DA31620334BD75D9DCB49F368818C72E52529D4
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
 
-	echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-	org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb.list
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-	org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb.list
 
-	sudo apt update
-	sudo apt install mongodb-org
+sudo apt update
+sudo apt install mongodb-org
 
 4) MongoDB Keyfile
 		openssl rand -base64 741 > keyFile
@@ -189,9 +190,7 @@ None faced
 
 ## Mistakes
 
-1) Mongo shell was not not running - 
-
-When you do mongo after installing and starting mongodb, then it gives an error - Connection Refused.
+1) Mongo shell was not not running - When you do mongo after installing and starting mongodb, then it gives an error - Connection Refused.
 
 **Solution**- 
 
@@ -220,54 +219,54 @@ Now that as we have our Mongo setup for one node is done we will create other No
 **Step 5: Launch new Instances using the AMI created**		
 
 ```
-		1) go to launch ec2 isntance
-		2) Select the AMI created
-		3) Instance Type:   t2.micro
-			Numbner of Instances: 2
-			VPC:             cmpe281
-			Network:         private subnet (us-west-1c)
-			Auto Public IP:  disable
-			Security Group:  mongodb-cluster 
-			SG Open Ports:   22, 27017
-			Key Pair:        cmpe281-us-west-1
+	1) go to launch ec2 isntance
+	2) Select the AMI created
+	3) Instance Type:   t2.micro
+		Numbner of Instances: 2
+		VPC:             cmpe281
+		Network:         private subnet (us-west-1c)
+		Auto Public IP:  disable
+		Security Group:  mongodb-cluster 
+		SG Open Ports:   22, 27017
+		Key Pair:        cmpe281-us-west-1
 
-		4) Instance Type:   t2.micro
-			Numbner of Instances: 2
-			VPC:             cmpe281
-			Network:         private subnet (us-west-1a)
-			Auto Public IP:  disable
-			Security Group:  mongodb-cluster 
-			SG Open Ports:   22, 27017
-			Key Pair:        cmpe281-us-west-1
+	4) Instance Type:   t2.micro
+		Numbner of Instances: 2
+		VPC:             cmpe281
+		Network:         private subnet (us-west-1a)
+		Auto Public IP:  disable
+		Security Group:  mongodb-cluster 
+		SG Open Ports:   22, 27017
+		Key Pair:        cmpe281-us-west-1
 ```
 
 **Step 6: Replace Host Names with Public IP or DNS Names.**
 
-	        sudo vi /etc/hosts   
-	            10.0.1.163 primary
-	            10.0.1.73 secondary1
-	            10.0.1.109 secondary2
-	            10.0.3.191 secondary3
-	            10.0.3.107 secondary4
+		sudo vi /etc/hosts   
+			10.0.1.163 primary
+			10.0.1.73 secondary1
+			10.0.1.109 secondary2
+			10.0.3.191 secondary3
+			10.0.3.107 secondary4
 
 **Step 7: Intializing the replica set**
 
-			Go to one of your private mongodb instance and make a replica set there
+		Go to one of your private mongodb instance and make a replica set there
 	
-			1) start mongo shell
-				mongo
-	
-			2) replica set
-				rs.initiate( {
-			       _id : "cmpe281",
-			       members: [
-			          { _id: 0, host: "primary:27017" },
-			          { _id: 1, host: "secondary1:27017" },
-			          { _id: 2, host: "secondary2:27017" },
-			          { _id: 3, host: "secondary3:27017" },
-			          { _id: 4, host: "secondary4:27017" }
-			       ]
-			    })
+		1) start mongo shell
+			mongo
+
+		2) replica set
+			rs.initiate( {
+				_id : "cmpe281",
+				members: [
+					{ _id: 0, host: "primary:27017" },
+					{ _id: 1, host: "secondary1:27017" },
+					{ _id: 2, host: "secondary2:27017" },
+					{ _id: 3, host: "secondary3:27017" },
+					{ _id: 4, host: "secondary4:27017" }
+				]
+			})
 
 **Step 8: Insert data into the monog using primary** 
 
@@ -298,12 +297,6 @@ Now that as we have our Mongo setup for one node is done we will create other No
 	
 			db.restaurant.find({}).pretty()
 			
-			#This further insertions will be used for testing
-			db.restaurant.insert({"id": "3","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
-	
-			db.restaurant.insert({"id": "4","restaurantName": "Milli Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
-
-  
 
 ## Challenges
 
@@ -311,38 +304,36 @@ None Faced
 
 ## Mistakes
 
-1) Hostname is not getting set in the /etc/hosts file
-**Solution**- I fixed this problem by doing reboot on the instense
+1. Hostname is not getting set in the /etc/hosts file
 
-2) Replicas initiation was giving error as connection refused
+	**Solution**- I fixed this problem by doing reboot on the instense
 
-I was getting the below error while initiating the replica set for mongodb​	
+2.  Replicas initiation was giving error as connection refused
+
+	I was getting the below error while initiating the replica set for mongodb​	
 
 ```
-rs.initiate( {
-        _id : "cmpe281",
-        members: [
-           { _id: 0, host: "primary:27017" },
-           { _id: 1, host: "secondary1:27017" },
-           { _id: 2, host: "secondary2:27017" },
-           { _id: 3, host: "secondary3:27017" },
-           { _id: 4, host: "secondary4:27017" }
-        ]
-     })
-{
-	"ok" : 0,
-	"errmsg" : "replSetInitiate quorum check failed because not all proposed set members responded affirmatively: secondary1:27017 failed with Error connecting to secondary1:27017 (10.0.1.73:27017) :: caused by :: Connection refused, secondary2:27017 failed with Error connecting to secondary2:27017 (10.0.1.109:27017) :: caused by :: Connection refused, secondary3:27017 failed with Error connecting to secondary3:27017 (10.0.3.191:27017) :: caused by :: Connection refused, secondary4:27017 failed with Error connecting to secondary4:27017 (10.0.3.107:27017) :: caused by :: Connection refused",
-	"code" : 74,
-	"codeName" : "NodeNotFound"
-}	
+	rs.initiate( {
+			_id : "cmpe281",
+			members: [
+			{ _id: 0, host: "primary:27017" },
+			{ _id: 1, host: "secondary1:27017" },
+			{ _id: 2, host: "secondary2:27017" },
+			{ _id: 3, host: "secondary3:27017" },
+			{ _id: 4, host: "secondary4:27017" }
+			]
+		})
+	{
+		"ok" : 0,
+		"errmsg" : "replSetInitiate quorum check failed because not all proposed set members responded affirmatively: secondary1:27017 failed with Error connecting to secondary1:27017 (10.0.1.73:27017) :: caused by :: Connection refused, secondary2:27017 failed with Error connecting to secondary2:27017 (10.0.1.109:27017) :: caused by :: Connection refused, secondary3:27017 failed with Error connecting to secondary3:27017 (10.0.3.191:27017) :: caused by :: Connection refused, secondary4:27017 failed with Error connecting to secondary4:27017 (10.0.3.107:27017) :: caused by :: Connection refused",
+		"code" : 74,
+		"codeName" : "NodeNotFound"
+	}	
 ```
-
-
 
 **Solution**- Jumpbox into each of your MongoDB instances(i.e primary and all secondary) and make sure that all instances have mongodb service up.
 
 You can start mongodb by - ```sudo service mongod restart```
-
 
 
 # Week 4 (10/28/2018) to (10/03/2018)
@@ -384,8 +375,9 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
    **Test Result-** 
 
-   Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
-   	  https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png
+   Image-
+   * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
+   * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png
 
 
 
@@ -437,45 +429,44 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
 1. Go to any of your secondary node Ec2 instance and execute the below commands to disconnect that node from the other nodes (Here I am disconnecting node2)
 
-```
-DROP connection
-	# drop ipaddress
-	sudo iptables -A INPUT -s 10.0.1.163 -j DROP      (primary node)
-	sudo iptables -A INPUT -s 10.0.1.109 -j DROP
-	sudo iptables -A INPUT -s 10.0.3.107 -j DROP
-	sudo iptables -A INPUT -s 10.0.3.191 -j DROP
-```
+	```
+	DROP connection
+		# drop ipaddress
+		sudo iptables -A INPUT -s 10.0.1.163 -j DROP      (primary node)
+		sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+		sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+		sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+	```
 
 2. Then insert some data in your primary node
 
-```
-db.restaurant.insert({"id": "3","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
-```
+	```
+	db.restaurant.insert({"id": "3","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+	```
 
 3. The login into your disconnected secondary and you will see that we are getting the stale records    and not the currenlty updated one.
 
-```
-db.restaurant.find({}).pretty()
-```
+	```
+	db.restaurant.find({}).pretty()
+	```
 
  4. Login into your secondary mongodb nodes which are not disconnected and you will see that connected secondary nodes are up to date and getting the newly insterted data.
 
-```
-db.restaurant.find({}).pretty()
-```
+	```
+	db.restaurant.find({}).pretty()
+	```
 
-​       ​     
+	**Test Result-** 
 
-​	**Test Result-** 
-
-​	Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
-	       https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
-
+	​Image-
+	* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
+	* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
 
 
-- [x] **Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances**		
 
-  **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**. 
+- [x] **Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances**
+
+  **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**.
 
   **Expected Outcome-** When primary node is disconnected then the new primary must be elected from the other secondary nodes
 
@@ -485,13 +476,13 @@ db.restaurant.find({}).pretty()
 
   1. Go to your primary node Ec2 instance and execute the below commands to disconnect that node from the other secondary nodes.
 
-  ```
-  #Disconnecting primary from other 3 secondary
-  
-  		sudo iptables -A INPUT -s 10.0.1.109 -j DROP
-  		sudo iptables -A INPUT -s 10.0.3.107 -j DROP
-  		sudo iptables -A INPUT -s 10.0.3.191 -j DROP
-  ```
+		```
+		#Disconnecting primary from other 3 secondary
+		
+			sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+			sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+			sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+		```
 
   2. Then do ```rs.status()``` and you will see that the node has error message as disconnected as it is disconnected from the netowork
 
@@ -500,9 +491,9 @@ db.restaurant.find({}).pretty()
   4. You can again connect the disconnecterd nodes by below commands
 
      ```
-           sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-     	  sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-     	  sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+		sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+		sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+		sudo iptables -D INPUT -s 10.0.3.191 -j DROP
      ```
 
 
@@ -572,14 +563,14 @@ Sharding steps
 
 **Step1- First launch 3 EC2 isntancefrom the Mongodb AMI we had created earlier**
 
-1. ```
-     For each of the config server ubuntu instance do the following (using Command or      Configuration)
+```
+     For each of the config server ubuntu instance do the following (using Command or Configuration)
    
       1) Using commands-
     
-      		mongod --configsvr --replSet cmpe281 --dbpath /var/lib/mongodb --port 27017. --logpoath /var/log/mongodb/mongod.log
+      mongod --configsvr --replSet cmpe281 --dbpath /var/lib/mongodb --port 27017. --logpoath /var/log/mongodb/mongod.log
    
-      		ps -aux | grep mongod   // to see the mongod service running
+      ps -aux | grep mongod   // to see the mongod service running
    
       2) By configuration parameters-
    
@@ -587,41 +578,41 @@ Sharding steps
    	   sudo vi /etc/mongod.conf
    	   
    	   	1) net:
-   	   			port: 27019
+   	   		port: 27019
    	   
-   	   	2) replication 
-   	   			replSetname: cmpe281
+   	   	2) replication
+   	   		replSetname: cmpe281
    
    	   	3) Sharding
-   	   			clusterRole: configsvr
+   	   		clusterRole: configsvr
    
    	   # make the host file changes
    		 sudo vi /etc/hosts  
-   			<your public IP of the instance> host name
-   			E.g.
-   			54.183.98.65 configServer1
-   			54.241.174.222 configServer2
-   			54.183.90.178 configServer3
+			<your public IP of the instance> host name
+			E.g.
+			54.183.98.65 configServer1
+			54.241.174.222 configServer2
+			54.183.90.178 configServer3
    ```
 
 
 
 **Step2- Now connect the mongo shell to one of the config server members by specifying the port number**
 
-1. 		Enable Mongo Service
-   			sudo systemctl enable mongod.service
-   	
-   		Restart MongoDB to apply our changes
-   			sudo service mongod restart
-   			sudo service mongod status
-   	
-   		Login to Mongo 
-   			mongo -port 27019
+		Enable Mongo Service
+		sudo systemctl enable mongod.service
+
+		Restart MongoDB to apply our changes
+		sudo service mongod restart
+		sudo service mongod status
+
+		Login to Mongo 
+		mongo -port 27019
 
 
 **Step3- Now inititalize the replia set for the config servers**
 
-1. 		rs.initiate( {_id : "cmpe281",configsvr: true,members: [{ _id: 0, host: "configServer1:27019" },{ _id: 1, host: "configServer2:27019" },{ _id: 2, host: "configServer3:27019" }]})
-   	
-   		rs.status()   // this will show you the status of the nodes
+		rs.initiate( {_id : "cmpe281",configsvr: true,members: [{ _id: 0, host: "configServer1:27019" },{ _id: 1, host: "configServer2:27019" },{ _id: 2, host: "configServer3:27019" }]})
+
+		rs.status()   // this will show you the status of the nodes
 
