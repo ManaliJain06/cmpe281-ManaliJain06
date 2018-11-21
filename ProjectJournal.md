@@ -385,10 +385,12 @@ Below are the test cases created for the Consistency of MongoDB during Partition
    **Test Result-** 
 
    Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
+   	  https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png
 
 
 
-- [x] Test 2 : API test reading and updating data**
+
+- [x] **Test 2 : API test reading and updating data**
 
   **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
 
@@ -417,11 +419,11 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   **Test Result-** 
 
-  Image-
+  Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test2_Result.png
 
 
 
-- [ ] 
+
 
 - [x] **Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes** **and read stale data**
 
@@ -466,7 +468,8 @@ db.restaurant.find({}).pretty()
 
 ​	**Test Result-** 
 
-​	Image-
+​	Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
+	       https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
 
 
 
@@ -506,7 +509,7 @@ db.restaurant.find({}).pretty()
 
   **Test Result-** 
 
-  Image-
+  Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
 
 
 - [x] **Test 5 Stop Primary mongodb to show leader selection and recovery**
