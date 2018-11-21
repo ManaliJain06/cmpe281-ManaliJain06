@@ -384,7 +384,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
    **Test Result-** 
 
-   Image- 
+   Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
 
 
 
