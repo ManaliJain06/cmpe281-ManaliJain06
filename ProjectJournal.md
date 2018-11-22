@@ -112,13 +112,13 @@ Name: 			 node1
 ```
 1) Login to Jumbox ec2-isntance by -
 ssh -i "cmpe281-us-west-1.pem" ubuntu@<jumpbox public IP or public DNS> using your AWS pem file.
-e.g ssh -i "cmpe281-us-west-1.pem" ubuntu@ec2-13-57-31-201.us-west-		1.compute.amazonaws.com
+e.g ssh -i "cmpe281-us-west-1.pem" ubuntu@ec2-13-57-31-201.us-west-1.compute.amazonaws.com
 
-2) Now to login to your private EC2 to install mongo on it we need to transfer the pem file from your local onto the jumbox to use it to 	login to node1 ec2 isntance
-Open a new terminal then do - 
-scp -i cmpe281-us-west-1.pem <pem file to transfer> 	ubuntu@<public IP for jumbox>:/tmp
+2) Now to login to your private EC2 to install mongo on it we need to transfer the pem file from your local onto the jumbox to use it to login to node1 ec2 isntance
+Open a new terminal then do -
+scp -i cmpe281-us-west-1.pem <pem file to transfer> ubuntu@<public IP for jumbox>:/tmp
 
-Now your file is being tranferred to the Jumbox temp folder. Use that file to login to the private node1 isntance by doing ssh 
+Now your file is being tranferred to the Jumbox temp folder. Use that file to login to the private node1 isntance by doing ssh
 
 3) Install mongoDB on ubuntu
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
@@ -349,7 +349,7 @@ You can start mongodb by - ```sudo service mongod restart```
 
 Below are the test cases created for the Consistency of MongoDB during Partition Tolerance
 
-- [x] **Test 1 : Replication Test**
+## Test 1 : Replication Test
 
   **Test Plan-** Secondary nodes should be able to replicate the data inserted into primary node 
 
@@ -382,7 +382,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
 
 
-- [x] **Test 2 : API test reading and updating data**
+## Test 2 : API test reading and updating data
 
   **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
 
@@ -417,7 +417,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
 
 
-- [x] **Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes** **and read stale data**
+## Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes and read stale data
 
   **Test Plan-** Make a partition tolerance by disconnecting one node(secondary) and observing behavioiur. 
 
@@ -464,7 +464,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
 
 
-- [x] **Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances**
+## Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances
 
   **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**.
 
@@ -503,7 +503,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
   Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
 
 
-- [x] **Test 5 Stop Primary mongodb to show leader selection and recovery**
+## Test 5 Stop Primary mongodb to show leader selection and recovery
 
   This test is in continuation of the Test4
 
@@ -561,7 +561,7 @@ Sharding steps
 
 1. **Setting up Config servers**
 
-**Step1- First launch 3 EC2 isntancefrom the Mongodb AMI we had created earlier**
+**Step 1- First launch 3 EC2 isntance from the Mongodb AMI we had created earlier**
 
 ```
      For each of the config server ubuntu instance do the following (using Command or Configuration)
@@ -595,9 +595,7 @@ Sharding steps
 			54.183.90.178 configServer3
    ```
 
-
-
-**Step2- Now connect the mongo shell to one of the config server members by specifying the port number**
+**Step 2- Now connect the mongo shell to one of the config server members by specifying the port number**
 
 		Enable Mongo Service
 		sudo systemctl enable mongod.service
@@ -610,9 +608,94 @@ Sharding steps
 		mongo -port 27019
 
 
-**Step3- Now inititalize the replia set for the config servers**
+**Step 3- Now inititalize the replia set for the config servers**
 
 		rs.initiate( {_id : "cmpe281",configsvr: true,members: [{ _id: 0, host: "configServer1:27019" },{ _id: 1, host: "configServer2:27019" },{ _id: 2, host: "configServer3:27019" }]})
 
 		rs.status()   // this will show you the status of the nodes
 
+2. **Setting up Sharding servers**
+
+**Step 1 - launch 6 sharding servers to be included in the two replica sets**
+
+Then for each of the config server ubuntu instance do the following either by command or by setting configuration parameters.
+Here we are making two clusters of 3-3 nodes each
+
+```
+1) By command-
+
+	sudo managod --shardsvr --replSet "shard1" --dbpath /var/lib/mongodb --port 27018 -fork --logpath /var/log/mongodb/mongod.log
+
+	ps -aux | grep mongod
+
+2) By configuration parameters-
+
+	#change the configuration parameter by
+	sudo vi /etc/mongod.conf
+	1) port
+		net to 27018
+
+	2) replication
+		replSetName: shard1
+
+	3) Sharding
+		clusterRole: shardsvr
+
+	# make the host file
+
+	For example - 1st cluster
+		18.144.3.175 shardServerA1
+		18.144.67.238 shardServerA2
+		54.193.61.152 shardServerA3
+
+	For example - 2nd cluster
+
+		54.183.185.134 shardServerB1
+		54.215.229.86 shardServerB2
+		52.53.157.65 shardServerB3
+
+sudo systemctl enable mongod.service
+
+Restart MongoDB to apply our changes
+	sudo service mongod restart
+	sudo service mongod status
+
+```
+**Step 2- Now connect the mongo shell to one of the shard server members in the cluster by specifying the port number**
+
+		Enable Mongo Service
+		sudo systemctl enable mongod.service
+
+		Restart MongoDB to apply our changes
+		sudo service mongod restart
+		sudo service mongod status
+
+		Login to Mongo 
+		mongo -port 27018
+
+**Step 3- Initializing the replica set for the Sharded cluster**
+
+```
+For 1st cluster
+rs.initiate( {
+	_id : "shard1",
+	members: [
+		{ _id: 0, host: "shardServerA1:27018" },
+		{ _id: 1, host: "shardServerA2:27018" },
+	 	{ _id: 2, host: "shardServerA3:27018" }
+ 	]
+   })
+
+rs.status()
+
+For 2nd cluster
+rs.initiate( {
+	_id : "shard1",
+	members: [
+		{ _id: 0, host: "shardServerB1:27018" },
+		{ _id: 1, host: "shardServerB2:27018" },
+	 	{ _id: 2, host: "shardServerB3:27018" }
+ 	]
+   })
+
+```
