@@ -84,28 +84,30 @@ Sarding stratergy
 **Step 1: Launch Private EC2 Free-Tier Instance**
 
 ```
-Name: 			 node1
-    	AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
-    	Instance Type:   t2.micro
-    	VPC:             cmpe281
-    	Network:         private subnet (us-west-1c)
-    	Auto Public IP:  disable
-    	Security Group:  mongodb-cluster 
-    	SG Open Ports:   22, 27017
-    	Key Pair:        cmpe281-us-west-1
+Name: node1
+AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
+Instance Type:   t2.micro
+VPC:             cmpe281
+Network:         private subnet (us-west-1c)
+Auto Public IP:  disable
+Security Group:  mongodb-cluster 
+SG Open Ports:   22, 27017
+Key Pair:        cmpe281-us-west-1
 ```
 
 **Step 2: Launch Public EC2 Free-Tier Instance for Jumpbox**
 
-		Name: 			 Jumpbox
-		AMI:             Ubuntu Server 16.04 LTS (HVM)
-		Instance Type:   t2.micro
-		VPC:             cmpe281
-		Network:         public subnet (us-west-1c)
-		Auto Public IP:  Enable
-		Security Group:  jumbox-security-group
-		SG Open Ports:   22
-		Key Pair:        cmpe281-us-west-1
+```
+Name:Jumpbox
+AMI:             Ubuntu Server 16.04 LTS (HVM)
+Instance Type:   t2.micro
+VPC:             cmpe281
+Network:         public subnet (us-west-1c)
+Auto Public IP:  Enable
+Security Group:  jumbox-security-group
+SG Open Ports:   22
+Key Pair:        cmpe281-us-west-1
+```
 
 **Step 3: Install mongodb in the private instance using Jumbox**
 
@@ -129,57 +131,57 @@ sudo apt update
 sudo apt install mongodb-org
 
 4) MongoDB Keyfile
-		openssl rand -base64 741 > keyFile
-		sudo mkdir -p /opt/mongodb
-		sudo cp keyFile /opt/mongodb
-		sudo chown mongodb:mongodb /opt/mongodb/keyFile
-		sudo chmod 0600 /opt/mongodb/keyFile
+
+openssl rand -base64 741 > keyFile
+sudo mkdir -p /opt/mongodb
+sudo cp keyFile /opt/mongodb
+sudo chown mongodb:mongodb /opt/mongodb/keyFile
+sudo chmod 0600 /opt/mongodb/keyFile
 
 5) Config mongod.conf
-		sudo vi /etc/mongod.conf
-		 
-		a) remove or comment out bindIp: 127.0.0.1
-		    replace with bindIp: 0.0.0.0 (binds on all ips) 
+sudo vi /etc/mongod.conf
+	
+	a) remove or comment out bindIp: 127.0.0.1. 
+	Replace with bindIp: 0.0.0.0 (binds on all ips) 
 
-		  	network interfaces
-		  	net:
-		        port: 27017
-		        bindIp: 0.0.0.0
-		 
-		b) Uncomment security section & add key file
-		 
-			Make Make sure there is two spaces in front of KeyFile
-		 
-			security:
-		    	keyFile: /opt/mongodb/keyFile
-		 
-		c) Uncomment Replication section. Name Replica Set = cmpe281
-		 
-			Make Make sure there is two spaces in front of replSetName
-			replication:
-		    	replSetName: cmpe281
+	network interfaces
+	net:
+		port: 27017
+		bindIp: 0.0.0.0
+	
+	b) Uncomment security section & add key file
+	Make Make sure there is two spaces in front of KeyFile
+	
+	security:
+		keyFile: /opt/mongodb/keyFile
+	
+	c) Uncomment Replication section. Name Replica Set = cmpe281
+	Make Make sure there is two spaces in front of replSetName
+
+	replication:
+		replSetName: cmpe281
 
 6) Create mongod.service
 
-		sudo vi /etc/systemd/system/mongod.service
+	sudo vi /etc/systemd/system/mongod.service
 
-		[Unit]
-		    Description=High-performance, schema-free document-oriented database
-		    After=network.target
+	[Unit]
+		Description=High-performance, schema-free document-oriented database
+		After=network.target
 
-		[Service]
-		    User=mongodb
-		    ExecStart=/usr/bin/mongod --quiet --config /etc/mongod.conf
+	[Service]
+		User=mongodb
+		ExecStart=/usr/bin/mongod --quiet --config /etc/mongod.conf
 
-		[Install]
-		    WantedBy=multi-user.target
+	[Install]
+		WantedBy=multi-user.target
 
 7) Enable Mongo Service
-		sudo systemctl enable mongod.service
+	sudo systemctl enable mongod.service
 
 8) Restart MongoDB to apply our changes
-		sudo service mongod restart
-		sudo service mongod status
+	sudo service mongod restart
+	sudo service mongod status
 ```
 
 
@@ -219,84 +221,86 @@ Now that as we have our Mongo setup for one node is done we will create other No
 **Step 5: Launch new Instances using the AMI created**		
 
 ```
-	1) go to launch ec2 isntance
-	2) Select the AMI created
-	3) Instance Type:   t2.micro
-		Numbner of Instances: 2
-		VPC:             cmpe281
-		Network:         private subnet (us-west-1c)
-		Auto Public IP:  disable
-		Security Group:  mongodb-cluster 
-		SG Open Ports:   22, 27017
-		Key Pair:        cmpe281-us-west-1
+1) go to launch ec2 isntance
+2) Select the AMI created
+3) Instance Type:   t2.micro
+	Numbner of Instances: 2
+	VPC:             cmpe281
+	Network:         private subnet (us-west-1c)
+	Auto Public IP:  disable
+	Security Group:  mongodb-cluster 
+	SG Open Ports:   22, 27017
+	Key Pair:        cmpe281-us-west-1
 
-	4) Instance Type:   t2.micro
-		Numbner of Instances: 2
-		VPC:             cmpe281
-		Network:         private subnet (us-west-1a)
-		Auto Public IP:  disable
-		Security Group:  mongodb-cluster 
-		SG Open Ports:   22, 27017
-		Key Pair:        cmpe281-us-west-1
+4) Instance Type:   t2.micro
+	Numbner of Instances: 2
+	VPC:             cmpe281
+	Network:         private subnet (us-west-1a)
+	Auto Public IP:  disable
+	Security Group:  mongodb-cluster 
+	SG Open Ports:   22, 27017
+	Key Pair:        cmpe281-us-west-1
 ```
 
 **Step 6: Replace Host Names with Public IP or DNS Names.**
 
-		sudo vi /etc/hosts   
-			10.0.1.163 primary
-			10.0.1.73 secondary1
-			10.0.1.109 secondary2
-			10.0.3.191 secondary3
-			10.0.3.107 secondary4
+sudo vi /etc/hosts   
+	10.0.1.163 primary
+	10.0.1.73 secondary1
+	10.0.1.109 secondary2
+	10.0.3.191 secondary3
+	10.0.3.107 secondary4
 
 **Step 7: Intializing the replica set**
 
-		Go to one of your private mongodb instance and make a replica set there
-	
-		1) start mongo shell
-			mongo
+Go to one of your private mongodb instance and make a replica set there
 
-		2) replica set
-			rs.initiate( {
-				_id : "cmpe281",
-				members: [
-					{ _id: 0, host: "primary:27017" },
-					{ _id: 1, host: "secondary1:27017" },
-					{ _id: 2, host: "secondary2:27017" },
-					{ _id: 3, host: "secondary3:27017" },
-					{ _id: 4, host: "secondary4:27017" }
-				]
-			})
+1) start mongo shell
+	mongo
 
-**Step 8: Insert data into the monog using primary** 
+2) replica set
+```
+rs.initiate( {
+	_id : "cmpe281",
+	members: [
+		{ _id: 0, host: "primary:27017" },
+		{ _id: 1, host: "secondary1:27017" },
+		{ _id: 2, host: "secondary2:27017" },
+		{ _id: 3, host: "secondary3:27017" },
+		{ _id: 4, host: "secondary4:27017" }
+	]
+})
+```
 
-		1) Create user
-			Create an admin user to access the database.
+**Step 8: Insert data into the mongo using primary** 
+
+```
+1) Create user
+    Create an admin user to access the database
+	mongo
+
+	Select admin database.
+
+	use admin
+
+	Create admin account.
+
+	db.createUser( {
+		user: "admin",
+		pwd: "cmpe281",
+		roles: [{ role: "root", db: "admin" }]
+	});
+
+2) Login to Primary as Admin:
+	mongo -u admin -p cmpe281 --authenticationDatabase admin
 	
-				mongo
-	
-			Select admin database.
-	
-				use admin
-	
-			Create admin account.
-	
-			    db.createUser( {
-			        user: "admin",
-			        pwd: "cmpe281",
-			        roles: [{ role: "root", db: "admin" }]
-			    });
-	
-		2) Login to Primary as Admin:
-			mongo -u admin -p cmpe281 --authenticationDatabase admin
-			
-			#Create database burger and collection restaurant
-			use burger;
-		
-			db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
-	
-			db.restaurant.find({}).pretty()
-			
+	#Create database burger and collection restaurant
+	use burger;
+
+	db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
+
+	db.restaurant.find({}).pretty()
+```
 
 ## Challenges
 
@@ -558,61 +562,205 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 ## Status
 
 Sharding steps
+Avaialabe at- https://www.linode.com/docs/databases/mongodb/build-database-clusters-with-mongodb/
+
+Preconfiguration before performing sharding
+
+1. With your previous private monogsb AMI created launch 9 more EC2 instances.
+```
+Name: ConfigServer1
+AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
+Instance Type:   t2.micro
+VPC:             cmpe281
+Network:         public subnet (us-west-1c)
+Auto Public IP:  disable
+Security Group:  mongodb-sharding 
+SG Open Ports:   22, 27017-27019
+Key Pair:        cmpe281-us-west-1
+```
+2. These instances will be used for demonstrating sharding for mongodb
+3. 3 of them will be our Configuration servers, 3 will be sharding cluster1 and other 3 will be sharding cluster2. So name them accordingly.
+4. In each of your EC2 instances change the host file and set the hostname with private IP of your instances.
+sudo vi /etc/hosts  
+``` 
+<private IP> node/instance name
+like this-
+10.0.0.182 mongo-config1
+10.0.0.154 mongo-config2
+10.0.0.82 mongo-config3
+10.0.0.146 mongo-shardA1
+10.0.0.118 mongo-shardA2
+10.0.0.19 mongo-shardA3
+10.0.0.99 mongo-shardB1
+10.0.0.74 mongo-shardB2
+10.0.0.123 mongo-shardB3
+10.0.0.110 mongos-query-router
+```
 
 1. **Setting up Config servers**
 
-**Step 1- First launch 3 EC2 isntance from the Mongodb AMI we had created earlier**
-
+**Step 1- SSH in one of your config servers to set mongodb user**
 ```
-     For each of the config server ubuntu instance do the following (using Command or Configuration)
-   
-      1) Using commands-
-    
-      mongod --configsvr --replSet cmpe281 --dbpath /var/lib/mongodb --port 27017. --logpoath /var/log/mongodb/mongod.log
-   
-      ps -aux | grep mongod   // to see the mongod service running
-   
-      2) By configuration parameters-
-   
-   	   # change the configuration parameters by
-   	   sudo vi /etc/mongod.conf
+When we created the AMI we had replication parameter setup in the mongo.conf file. To create a monogdb user we first need to comment that parameter and stat mongodb by below commands-
+
+sudo systemctl enable mongod.service
+
+- Restart MongoDB to apply our changes
+	sudo service mongod restart
+	sudo service mongod status
+
+	use admin
+	db.createUser(
+		{user: "mongo-admin",
+		pwd: "cmpe281",
+		roles:[{role: "root", db: "admin"}]
+		})
+```
+**Step 2- SSH in each of your config servers to change mongod.conf**
+```
+For each of the config server ubuntu instance do the following
+change the configuration parameters by
+   	sudo vi /etc/mongod.conf
    	   
-   	   	1) net:
-   	   		port: 27019
-   	   
-   	   	2) replication
-   	   		replSetname: cmpe281
-   
-   	   	3) Sharding
-   	   		clusterRole: configsvr
-   
-   	   # make the host file changes
-   		 sudo vi /etc/hosts  
-			<your public IP of the instance> host name
-			E.g.
-			54.183.98.65 configServer1
-			54.241.174.222 configServer2
-			54.183.90.178 configServer3
-   ```
+	1) net:
+		port: 27019
+		bindIp: <private IP of your instance> e.g. 10.0.0.182
+	
+	2) replication
+		replSetname: configReplica
 
-**Step 2- Now connect the mongo shell to one of the config server members by specifying the port number**
+	3) Sharding
+		clusterRole: "configsvr"
 
-		Enable Mongo Service
-		sudo systemctl enable mongod.service
+Restart your monogdb instance by - sudo systemctl restart mongod
+```
+**Step 3- Inintialize replica set on the config serversOn one of your config servers preformNow connect the mongo shell to one of the config server members by specifying the port number**
+```
+On one of your config servers perform the below steps
 
-		Restart MongoDB to apply our changes
-		sudo service mongod restart
-		sudo service mongod status
+- Login into the mongo shell by
+mongo mongo-config1:27019 -u mongo-admin -p --authenticationDatabase admin
 
-		Login to Mongo 
-		mongo -port 27019
+- enter password that you set earlier on prompt
 
+- Inititalize replica set
 
-**Step 3- Now inititalize the replia set for the config servers**
+rs.initiate( 
+	{_id: "configReplica",
+	configsvr: true,
+	members: [ 
+		{ _id: 0, host: "mongo-config1:27019" },
+		{ _id: 1, host: "mongo-config2:27019" },
+		{ _id: 2, host: "mongo-config3:27019" } ] 
+	} )
 
-		rs.initiate( {_id : "cmpe281",configsvr: true,members: [{ _id: 0, host: "configServer1:27019" },{ _id: 1, host: "configServer2:27019" },{ _id: 2, host: "configServer3:27019" }]})
+- you will get- configReplica:PRIMARY> 
+                configReplica:SECONDARY> like this 
+```
+2. **Setting up Query Router (Mongos)**
 
-		rs.status()   // this will show you the status of the nodes
+**Step 1- Launch a new Public EC2 instance for Mongos**
+```
+EC2configuration
+Name: mongos-query-router
+AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
+Instance Type:   t2.micro
+VPC:             cmpe281
+Network:         public subnet (us-west-1c)
+Auto Public IP:  disable
+Security Group:  mongodb-cluster 
+SG Open Ports:   22, 27017-27019, 80, 443
+Key Pair:        cmpe281-us-west-1
+```
+**Step 2- Configure host file with IP of each instances**
+```
+change the host file- sudo vi /etc/hosts
+10.0.0.182 mongo-config1
+10.0.0.154 mongo-config2
+10.0.0.82 mongo-config3
+10.0.0.146 mongo-shardA1
+10.0.0.118 mongo-shardA2
+10.0.0.19 mongo-shardA3
+10.0.0.99 mongo-shardB1
+10.0.0.74 mongo-shardB2
+10.0.0.123 mongo-shardB3
+10.0.0.110 mongos-query-router
+```
+**Step 3- Setup Mongodb on Mongos instance **
+```
+1) Download mongodb
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-	org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb.list
+
+sudo apt update
+sudo apt install mongodb-org
+
+2) MongoDB Keyfile
+
+openssl rand -base64 741 > keyFile
+sudo mkdir -p /opt/mongodb
+sudo cp keyFile /opt/mongodb
+sudo chown mongodb:mongodb /opt/mongodb/keyFile
+sudo chmod 0600 /opt/mongodb/keyFile
+
+3) Config mongos.conf
+sudo vi /etc/mongos.conf
+	
+		# where to write logging data.
+		systemLog:
+		  destination: file
+		  logAppend: true
+		  path: /var/log/mongodb/mongos.log
+
+		# network interfaces
+		net:
+		  port: 27017
+		  bindIp: 10.0.0.110
+
+		security:
+		  keyFile: /opt/mongodb/keyFile
+
+		sharding:
+  		  configDB: configReplica/mongo-config1:27019,mongo-config2:27019,mongo-config3:27019
+
+No need to do replication here
+we define a configDB parameter with the replica set name if config server followed by the hostname and port
+
+4) Create a new systemd file - mongos.service
+
+	[Unit]
+		Description=Mongo Cluster Router
+		After=network.target
+
+	[Service]
+		User=mongodb
+		Group=mongodb
+		ExecStart=/usr/bin/mongos --config /etc/mongos.conf
+		# file size
+		LimitFSIZE=infinity
+		# cpu time
+		LimitCPU=infinity
+		# virtual memory size
+		LimitAS=infinity
+		# open files
+		LimitNOFILE=64000
+		# processes/threads
+		LimitNPROC=64000
+		# total threads (user+kernel)
+		TasksMax=infinity
+		TasksAccounting=false
+
+	[Install]
+		WantedBy=multi-user.target
+
+7) Enable Mongo Service
+	sudo systemctl enable mongod.service
+
+8) Restart MongoDB to apply our changes
+	sudo service mongod restart
+	sudo service mongod status
+```
 
 2. **Setting up Sharding servers**
 
