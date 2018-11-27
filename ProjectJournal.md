@@ -558,7 +558,6 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 3) Using MongoDB Bios Collection demonstrate sharding and select a shard key
 
 
-
 ## Status
 
 Sharding steps
@@ -597,18 +596,19 @@ like this-
 10.0.0.110 mongos-query-router
 ```
 
-1. **Setting up Config servers**
+# 1. Setting up Config servers
 
 **Step 1- SSH in one of your config servers to set mongodb user**
 ```
 When we created the AMI we had replication parameter setup in the mongo.conf file. To create a monogdb user we first need to comment that parameter and stat mongodb by below commands-
-
+No need of setting replication and sharding parameter when you create a mongodb user.
 sudo systemctl enable mongod.service
 
 - Restart MongoDB to apply our changes
 	sudo service mongod restart
 	sudo service mongod status
 
+	mongo
 	use admin
 	db.createUser(
 		{user: "mongo-admin",
@@ -657,7 +657,7 @@ rs.initiate(
 - you will get- configReplica:PRIMARY> 
                 configReplica:SECONDARY> like this 
 ```
-2. **Setting up Query Router (Mongos)**
+# 2. Setting up Query Router (Mongos)
 
 **Step 1- Launch a new Public EC2 instance for Mongos**
 ```
@@ -686,7 +686,7 @@ change the host file- sudo vi /etc/hosts
 10.0.0.123 mongo-shardB3
 10.0.0.110 mongos-query-router
 ```
-**Step 3- Setup Mongodb on Mongos instance **
+**Step 3- Setup Mongodb on Mongos instance**
 ```
 1) Download mongodb
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
@@ -724,8 +724,8 @@ sudo vi /etc/mongos.conf
 		sharding:
   		  configDB: configReplica/mongo-config1:27019,mongo-config2:27019,mongo-config3:27019
 
-No need to do replication here
-we define a configDB parameter with the replica set name if config server followed by the hostname and port
+No need to do replication here.
+We define a configDB parameter with the replica set name of config servers followed by the config serveer's hostname and port number.
 
 4) Create a new systemd file - mongos.service
 
@@ -754,96 +754,191 @@ we define a configDB parameter with the replica set name if config server follow
 	[Install]
 		WantedBy=multi-user.target
 
-7) Enable Mongo Service
-	sudo systemctl enable mongod.service
+7) Make sure that mongod is stopped- This is because the mongos sercice need the data lock. So if mongod service is running then the lock will not be accuried . So stop mongod service before enabling mongos sercice by executing below command
+ sudo systemctl stop mongod
 
-8) Restart MongoDB to apply our changes
+8) Enable Mongos Service
+sudo systemctl enable mongos.service
+
+9) Restart Mongos to apply our changes
+sudo systemctl start mongos
+systemctl status mongos
+sudo systemctl stop mongos
+
+when successfully run then it will give the output as- 
+● mongos.service - Mongo Cluster Router
+   Loaded: loaded (/lib/systemd/system/mongos.service; enabled; vendor preset: enabled)
+   Active: active (running) since Thu 2018-11-22 08:05:17 UTC; 3s ago
+ Main PID: 15616 (mongos)
+    Tasks: 19
+   Memory: 11.2M
+      CPU: 69ms
+   CGroup: /system.slice/mongos.service
+           └─15616 /usr/bin/mongos --config /etc/mongos.conf
+
+```
+
+# 3. Setting up Sharding servers
+
+**Step 1- SSH in one of your config servers to set mongodb user**
+```
+When we created the AMI we had replication parameter setup in the mongo.conf file. To create a monogdb user we first need to comment that parameter and stat mongodb by below commands-
+No need of setting replication and sharding parameter when you create a mongodb user.
+
+sudo systemctl enable mongod.service
+
+- Restart MongoDB to apply our changes
 	sudo service mongod restart
 	sudo service mongod status
+
+	mongo
+	use admin
+	db.createUser(
+		{user: "mongo-admin",
+		pwd: "cmpe281",
+		roles:[{role: "root", db: "admin"}]
+		})
 ```
-
-2. **Setting up Sharding servers**
-
-**Step 1 - launch 6 sharding servers to be included in the two replica sets**
-
-Then for each of the config server ubuntu instance do the following either by command or by setting configuration parameters.
-Here we are making two clusters of 3-3 nodes each
-
+**Step 2- Shard Replicas setupConfigure mongod.conf in each of your sharding replicas**
 ```
-1) By command-
+We have two sharding cluster with 3 EC2 isnstances in each one of them.
 
-	sudo managod --shardsvr --replSet "shard1" --dbpath /var/lib/mongodb --port 27018 -fork --logpath /var/log/mongodb/mongod.log
+For each shard cluster do the below steps- (make note of changing replSetname of instances according to the cluster)
 
-	ps -aux | grep mongod
+1) change mongod.conf
 
-2) By configuration parameters-
-
-	#change the configuration parameter by
-	sudo vi /etc/mongod.conf
-	1) port
-		net to 27018
+sudo vi /etc/mongod.conf  
+	1) net:
+		port: 27017
+		bindIp: <private IP of your instance> e.g. 10.0.0.182
 
 	2) replication
-		replSetName: shard1
+		replSetname: shard1
 
 	3) Sharding
 		clusterRole: shardsvr
 
-	# make the host file
-
-	For example - 1st cluster
-		18.144.3.175 shardServerA1
-		18.144.67.238 shardServerA2
-		54.193.61.152 shardServerA3
-
-	For example - 2nd cluster
-
-		54.183.185.134 shardServerB1
-		54.215.229.86 shardServerB2
-		52.53.157.65 shardServerB3
-
+2) enable mongod service-
 sudo systemctl enable mongod.service
 
-Restart MongoDB to apply our changes
-	sudo service mongod restart
-	sudo service mongod status
+3) Restart monogod
+sudo service mongod restart
+sudo service mongod status
 
+4) Login to mongo shell
+mongo mongo-shardA1:27017 -u mongo-admin -p --authenticationDatabase admin
+
+enter password that you set earlier
+
+For Cluster 1
+rs.initiate( { 
+	_id: "shard1", 
+	members: [ 
+		{ _id: 0, host: "mongo-shardA1:27017" },
+		{ _id: 1, host: "mongo-shardA2:27017" },
+		{ _id: 2, host: "mongo-shardA3:27017" } ] 
+	} )
+
+For Cluster 2
+rs.initiate( { 
+	_id: "shard2", 
+	members: [ 
+		{ _id: 0, host: "mongo-shardB1:27017" },
+		{ _id: 1, host: "mongo-shardB2:27017" },
+		{ _id: 2, host: "mongo-shardB3:27017" } ] 
+	} )
 ```
-**Step 2- Now connect the mongo shell to one of the shard server members in the cluster by specifying the port number**
-
-		Enable Mongo Service
-		sudo systemctl enable mongod.service
-
-		Restart MongoDB to apply our changes
-		sudo service mongod restart
-		sudo service mongod status
-
-		Login to Mongo 
-		mongo -port 27018
-
-**Step 3- Initializing the replica set for the Sharded cluster**
-
+**Step 3- Adding shards to our clusters - SHARDING STEPS**
 ```
-For 1st cluster
-rs.initiate( {
-	_id : "shard1",
-	members: [
-		{ _id: 0, host: "shardServerA1:27018" },
-		{ _id: 1, host: "shardServerA2:27018" },
-	 	{ _id: 2, host: "shardServerA3:27018" }
- 	]
-   })
+1) From each primary monogdb instance of your cluster, connect to monogs by-
 
-rs.status()
+mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
-For 2nd cluster
-rs.initiate( {
-	_id : "shard1",
-	members: [
-		{ _id: 0, host: "shardServerB1:27018" },
-		{ _id: 1, host: "shardServerB2:27018" },
-	 	{ _id: 2, host: "shardServerB3:27018" }
- 	]
-   })
+2) In the mongos shell now add shards
 
+sh.addShard( "shard1/mongo-shardA1:27017,mongo-shardA2:27017,mongo-shardA3:27017" )
+sh.addShard( "shard2/mongo-shardB1:27017,mongo-shardB2:27017,mongo-shardB3:27017" )
+
+3) Sharding at Database Level
+
+- Login to mongos query router from the primary EC2 instances of any shard cluster (using shard1 here) and execute below commands
+
+	use cmpe281DB
+	sh.enableSharding("cmpe281DB")
+
+4) Sharding at collection level
+
+	use cmpe281DB
+
+	insert one document from BIOS collection
+	db.bios.insert({
+    "name" : {
+        "first" : "Guido",
+        "last" : "van Rossum"
+    },
+    "birth" : ISODate("1956-01-31T05:00:00Z"),
+    "contribs" : [
+        "Python"
+    ],
+    "awards" : [
+        {
+            "award" : "Award for the Advancement of Free Software",
+            "year" : 2001,
+            "by" : "Free Software Foundation"
+        },
+        {
+            "award" : "NLUUG Award",
+            "year" : 2003,
+            "by" : "NLUUG"
+        }
+    ]  })
+
+	db.bios.ensureIndex( { name : 1 } )
+
+	sh.shardCollection( "cmpe281DB.bios", { "name" : 1 } )
+
+	//insert more data in your collection and the data will get shard
+
+	db.bios.getShardDistribution() // this will give you the sharding distribution
 ```
+
+## Mistakes
+1) No such process on starting mongos
+```
+ubuntu@ip-10-0-0-110:~$ sudo systemctl start mongos
+ubuntu@ip-10-0-0-110:~$ systemctl status mongos
+
+● mongos.service - Mongo Cluster Router
+   Loaded: loaded (/lib/systemd/system/mongos.service; enabled; vendor preset: enabled)
+   Active: failed (Result: exit-code) since Thu 2018-11-22 07:35:23 UTC; 7s ago
+  Process: 15440 ExecStart=/usr/bin/mongos --config /etc/mongos.conf (code=exited, status=217/USER)
+ Main PID: 15440 (code=exited, status=217/USER)
+
+Nov 22 07:35:23 ip-10-0-0-110 systemd[1]: Started Mongo Cluster Router.
+Nov 22 07:35:23 ip-10-0-0-110 systemd[15440]: mongos.service: Failed at step USER spawning /usr/bin/mongos: No such process
+Nov 22 07:35:23 ip-10-0-0-110 systemd[1]: mongos.service: Main process exited, code=exited, status=217/USER
+Nov 22 07:35:23 ip-10-0-0-110 systemd[1]: mongos.service: Unit entered failed state.
+Nov 22 07:35:23 ip-10-0-0-110 systemd[1]: mongos.service: Failed with result 'exit-code'.
+```
+Solution- When you set mongos.service, make sure to set ```User as mongodb``` when using Ubuntu AWS AMI and ```mongod``` when usinf centOS AMI
+
+2) Unrecognized option: keyFile
+```
+ubuntu@ip-10-0-0-110:/opt/mongodb$ sudo systemctl start mongos
+ubuntu@ip-10-0-0-110:/opt/mongodb$ systemctl status mongos
+● mongos.service - Mongo Cluster Router
+   Loaded: loaded (/lib/systemd/system/mongos.service; enabled; vendor preset: enabled)
+   Active: failed (Result: exit-code) since Thu 2018-11-22 08:01:06 UTC; 5s ago
+  Process: 15563 ExecStart=/usr/bin/mongos --config /etc/mongos.conf (code=exited, status=2)
+ Main PID: 15563 (code=exited, status=2)
+
+Nov 22 08:01:06 ip-10-0-0-110 systemd[1]: Started Mongo Cluster Router.
+Nov 22 08:01:06 ip-10-0-0-110 mongos[15563]: Unrecognized option: keyFile
+Nov 22 08:01:06 ip-10-0-0-110 mongos[15563]: try '/usr/bin/mongos --help' for more information
+Nov 22 08:01:06 ip-10-0-0-110 systemd[1]: mongos.service: Main process exited, code=exited, status=2/INVALIDARGUMENT
+Nov 22 08:01:06 ip-10-0-0-110 systemd[1]: mongos.service: Unit entered failed state.
+Nov 22 08:01:06 ip-10-0-0-110 systemd[1]: mongos.service: Failed with result 'exit-code'.
+```
+Solution- Make sure that you have given proper indentation in mongos.conf file. The file must be indented with 2 spacing.
+
+3) Make sure the host file has all the hostnames otherwise mongos will not be able to recognise the congigDB parameters and gives error
