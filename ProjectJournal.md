@@ -942,3 +942,104 @@ Nov 22 08:01:06 ip-10-0-0-110 systemd[1]: mongos.service: Failed with result 'ex
 Solution- Make sure that you have given proper indentation in mongos.conf file. The file must be indented with 2 spacing.
 
 3) Make sure the host file has all the hostnames otherwise mongos will not be able to recognise the congigDB parameters and gives error
+
+
+# Week 6 (11/11/2018) to (11/17/2018)
+**Riak Week**
+
+## Plan
+1) To setup Riak cluster on AWS Ec2 isntances.
+
+2) To do replication on the Riak cluster by following the design.
+
+3) Test for AP properties of Riak setup that we have done earlier.
+
+4) Write test cases.
+
+## Status
+
+**AWS Riak Setup**
+Available at- http://docs.basho.com/riak/kv/2.2.3/setup/installing/amazon-web-services/
+
+**Step 1: Launch 5 Private EC2 Free-Tier Instance**
+```
+Name: Riak-coordinator
+AWS Marketplace: Riak KV 2.2 Series
+Instance Type:   t2.micro
+Number of Instances: 5
+VPC:             cmpe281
+Network:         private subnet (us-west-1c)
+Auto Public IP:  disable
+Security Group:  riak-cluster
+SG Open Ports:   8098, 8087, 4369, 9080, 22, 6000-7999
+Key Pair:        cmpe281-us-west-1
+```
+
+**Step 2: Riak Configuration setup**
+```
+1) On each Riak EC2 instance do the following
+- Set min and max port in riak.conf
+	cd /etc/riak
+	sudo vi riak.conf
+	
+	erlang.distribution.port_range.minimum = 6000
+	erlang.distribution.port_range.maximum = 7999
+
+- Start Riak cluster
+	sudo riak start
+	sudo riak-admin cluster status
+
+The output will be like this-
+---- Cluster Status ----
+Ring ready: true
+
++---------------------+------+-------+-----+-------+
+|        node         |status| avail |ring |pending|
++---------------------+------+-------+-----+-------+
+| (C) riak@10.0.1.195 |valid |  up   |100.0|  --   |
++---------------------+------+-------+-----+-------+
+
+- Joining nodes to the cluster
+Perform this on all 4 members other than coordinator. Here we are taking the first node as the coordinator node so we will join all other nodes to the first one
+
+	sudo riak-admin cluster join riak@<IP address of coordinator>
+	sudo riak-admin cluster join riak@10.0.1.195
+
+The output will be like this-
+Success: staged join request for 'riak@10.0.1.202' to 'riak@10.0.1.195'
+
+- Now add all the nodes to the cluster by executing the below command in the coordinator AWS EC2 instance
+	 sudo riak-admin cluster plan
+     sudo riak-admin cluster status
+
+The output will be like this-
+Ring ready: true
+
++---------------------+-------+-------+-----+-------+
+|        node         |status | avail |ring |pending|
++---------------------+-------+-------+-----+-------+
+|     riak@10.0.1.202 |joining|  up   |  0.0|  --   |
+|     riak@10.0.1.225 |joining|  up   |  0.0|  --   |
+|     riak@10.0.1.39  |joining|  up   |  0.0|  --   |
+|     riak@10.0.1.67  |joining|  up   |  0.0|  --   |
+| (C) riak@10.0.1.195 | valid |  up   |100.0|  --   |
++---------------------+-------+-------+-----+-------+
+
+```
+**Step 3: Insert data into Riak cluster**
+- Insert data into database
+    
+	curl -v -XPUT http://10.0.1.195:8098/buckets/bucket/keys/key1?returnbody=true -d '{"foo":"bar"}'
+
+	curl -v -XPUT http://10.0.1.202:8098/buckets/bucket/keys/key1?returnbody=true -d '{"foo":"bar"}'
+
+- Accessing data from database
+    curl -i http://10.0.1.195:8098/buckets/bucket/keys/key1
+
+	Always change the hostname according to the npde IP. If running on member 1 then set the IP of member 1
+
+## Challenges
+
+None Faced
+
+## Mistakes
