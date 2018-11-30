@@ -857,7 +857,7 @@ rs.initiate( {
 ```
 **Step 3- Adding shards to our clusters - SHARDING STEPS**
 ```
-1) From each primary monogdb instance of your cluster, connect to monogs by-
+1) In your query router connect to monog by-
 
 mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
@@ -867,8 +867,6 @@ sh.addShard( "shard1/mongo-shardA1:27017,mongo-shardA2:27017,mongo-shardA3:27017
 sh.addShard( "shard2/mongo-shardB1:27017,mongo-shardB2:27017,mongo-shardB3:27017" )
 
 3) Sharding at Database Level
-
-- Login to mongos query router from the primary EC2 instances of any shard cluster (using shard1 here) and execute below commands
 mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
 	use cmpe281DB
@@ -884,26 +882,26 @@ mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
 	insert one document from BIOS collection
 	db.bios.insert({
-    "name" : {
-        "first" : "Guido",
-        "last" : "van Rossum"
-    },
-    "birth" : ISODate("1956-01-31T05:00:00Z"),
-    "contribs" : [
-        "Python"
-    ],
-    "awards" : [
-        {
-            "award" : "Award for the Advancement of Free Software",
-            "year" : 2001,
-            "by" : "Free Software Foundation"
-        },
-        {
-            "award" : "NLUUG Award",
-            "year" : 2003,
-            "by" : "NLUUG"
-        }
-    ]  })
+	    "name" : {
+		"first" : "Guido",
+		"last" : "van Rossum"
+	    },
+	    "birth" : ISODate("1956-01-31T05:00:00Z"),
+	    "contribs" : [
+		"Python"
+	    ],
+	    "awards" : [
+		{
+		    "award" : "Award for the Advancement of Free Software",
+		    "year" : 2001,
+		    "by" : "Free Software Foundation"
+		},
+		{
+		    "award" : "NLUUG Award",
+		    "year" : 2003,
+		    "by" : "NLUUG"
+		}
+	    ]  })
 
 	//insert more data in your collection and the data will get shard
 
@@ -924,6 +922,15 @@ Totals
  data : 915B docs : 2 chunks : 4
  Shard shard1 contains 55.51% data, 50% docs in cluster, avg obj size on shard : 508B
  Shard shard2 contains 44.48% data, 50% docs in cluster, avg obj size on shard : 407B
+ 
+ Image for Shard disribution for 10 Bios Collection - 
+ ShardDistributionFor_10BiosDocuments
+ 
+ https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
+ 
+ Detailed screenshots of all the cluster setup is attached in the MongoDB-Sharding folder on below link-
+ https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding
+ 
 ```
 
 ## Mistakes
