@@ -565,15 +565,15 @@ Avaialabe at- https://www.linode.com/docs/databases/mongodb/build-database-clust
 
 Preconfiguration before performing sharding
 
-1. With your previous private monogsb AMI created launch 9 more EC2 instances.
+1. With your previous mongodb AMI created launch 9 more EC2 instances.
 ```
 Name: ConfigServer1
 AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
 Instance Type:   t2.micro
 VPC:             cmpe281
 Network:         public subnet (us-west-1c)
-Auto Public IP:  disable
-Security Group:  mongodb-sharding 
+Auto Public IP:  enable
+Security Group:  mongodb-sharding
 SG Open Ports:   22, 27017-27019
 Key Pair:        cmpe281-us-west-1
 ```
@@ -600,7 +600,7 @@ like this-
 
 **Step 1- SSH in one of your config servers to set mongodb user**
 ```
-When we created the AMI we had replication parameter setup in the mongo.conf file. To create a monogdb user we first need to comment that parameter and stat mongodb by below commands-
+When we created the AMI we had replication parameter setup in the mongo.conf file. To create a monogdb user we first need to comment that parameter and start mongodb by below commands-
 No need of setting replication and sharding parameter when you create a mongodb user.
 sudo systemctl enable mongod.service
 
@@ -632,7 +632,9 @@ change the configuration parameters by
 	3) Sharding
 		clusterRole: "configsvr"
 
-Restart your monogdb instance by - sudo systemctl restart mongod
+Restart your monogdb instance by - 
+	sudo systemctl restart mongod
+	sudo systemctl status mongod
 ```
 **Step 3- Inintialize replica set on the config serversOn one of your config servers preformNow connect the mongo shell to one of the config server members by specifying the port number**
 ```
@@ -667,8 +669,8 @@ AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
 Instance Type:   t2.micro
 VPC:             cmpe281
 Network:         public subnet (us-west-1c)
-Auto Public IP:  disable
-Security Group:  mongodb-cluster 
+Auto Public IP:  enable
+Security Group:  mongodb-cluster
 SG Open Ports:   22, 27017-27019, 80, 443
 Key Pair:        cmpe281-us-west-1
 ```
@@ -727,7 +729,9 @@ sudo vi /etc/mongos.conf
 No need to do replication here.
 We define a configDB parameter with the replica set name of config servers followed by the config serveer's hostname and port number.
 
-4) Create a new systemd file - mongos.service
+4) Create a new systemd file -
+
+	sudo vi /lib/systemd/system/mongos.service
 
 	[Unit]
 		Description=Mongo Cluster Router
@@ -813,7 +817,7 @@ sudo vi /etc/mongod.conf
 		bindIp: <private IP of your instance> e.g. 10.0.0.182
 
 	2) replication
-		replSetname: shard1
+		replSetname: shard1   //this name should change according to cluster
 
 	3) Sharding
 		clusterRole: shardsvr
@@ -840,6 +844,9 @@ rs.initiate( {
 	} )
 
 For Cluster 2
+
+mongo mongo-shardB1:27017 -u mongo-admin -p --authenticationDatabase admin
+
 rs.initiate( { 
 	_id: "shard2", 
 	members: [ 
@@ -862,6 +869,7 @@ sh.addShard( "shard2/mongo-shardB1:27017,mongo-shardB2:27017,mongo-shardB3:27017
 3) Sharding at Database Level
 
 - Login to mongos query router from the primary EC2 instances of any shard cluster (using shard1 here) and execute below commands
+mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
 	use cmpe281DB
 	sh.enableSharding("cmpe281DB")
@@ -869,6 +877,10 @@ sh.addShard( "shard2/mongo-shardB1:27017,mongo-shardB2:27017,mongo-shardB3:27017
 4) Sharding at collection level
 
 	use cmpe281DB
+
+	db.bios.ensureIndex( { _id : "hashed" } )
+
+	sh.shardCollection( "cmpe281DB.bios", { "_id" : "hashed" } )
 
 	insert one document from BIOS collection
 	db.bios.insert({
@@ -893,13 +905,25 @@ sh.addShard( "shard2/mongo-shardB1:27017,mongo-shardB2:27017,mongo-shardB3:27017
         }
     ]  })
 
-	db.bios.ensureIndex( { name : 1 } )
-
-	sh.shardCollection( "cmpe281DB.bios", { "name" : 1 } )
-
 	//insert more data in your collection and the data will get shard
 
-	db.bios.getShardDistribution() // this will give you the sharding distribution
+	db.bios.getShardDistribution() // this will give you the sharding distribution\
+
+Output be like-
+Shard shard1 at shard1/mongo-shardA1:27017,mongo-shardA2:27017,mongo-shardA3:27017
+ data : 508B docs : 1 chunks : 2
+ estimated data per chunk : 254B
+ estimated docs per chunk : 0
+
+Shard shard2 at shard2/mongo-shardB1:27017,mongo-shardB2:27017,mongo-shardB3:27017
+ data : 407B docs : 1 chunks : 2
+ estimated data per chunk : 203B
+ estimated docs per chunk : 0
+
+Totals
+ data : 915B docs : 2 chunks : 4
+ Shard shard1 contains 55.51% data, 50% docs in cluster, avg obj size on shard : 508B
+ Shard shard2 contains 44.48% data, 50% docs in cluster, avg obj size on shard : 407B
 ```
 
 ## Mistakes
@@ -1003,43 +1027,203 @@ Ring ready: true
 Perform this on all 4 members other than coordinator. Here we are taking the first node as the coordinator node so we will join all other nodes to the first one
 
 	sudo riak-admin cluster join riak@<IP address of coordinator>
-	sudo riak-admin cluster join riak@10.0.1.195
+	sudo riak-admin cluster join riak@10.0.1.195    // run this command in all other 4 members
 
 The output will be like this-
 Success: staged join request for 'riak@10.0.1.202' to 'riak@10.0.1.195'
 
-- Now add all the nodes to the cluster by executing the below command in the coordinator AWS EC2 instance
-	 sudo riak-admin cluster plan
-     sudo riak-admin cluster status
+- Now add all the nodes to the cluster by executing the below command only in the coordinator AWS EC2 instance
+	sudo riak-admin cluster plan
+	sudo riak-admin cluster commit
+	sudo riak-admin cluster status
 
 The output will be like this-
+Output after plan-
+================================= Membership ==================================
+Status     Ring    Pending    Node
+-------------------------------------------------------------------------------
+valid     100.0%     20.3%    'riak@10.0.1.195'
+valid       0.0%     20.3%    'riak@10.0.1.202'
+valid       0.0%     20.3%    'riak@10.0.1.225'
+valid       0.0%     20.3%    'riak@10.0.1.39'
+valid       0.0%     18.8%    'riak@10.0.1.67'
+-------------------------------------------------------------------------------
+Valid:5 / Leaving:0 / Exiting:0 / Joining:0 / Down:0
+
+Transfers resulting from cluster changes: 51
+  12 transfers from 'riak@10.0.1.195' to 'riak@10.0.1.67'
+  13 transfers from 'riak@10.0.1.195' to 'riak@10.0.1.39'
+  13 transfers from 'riak@10.0.1.195' to 'riak@10.0.1.202'
+  13 transfers from 'riak@10.0.1.195' to 'riak@10.0.1.225'
+
+Output after commit-
+Cluster changes committed
+
+Output after status-
 Ring ready: true
-
-+---------------------+-------+-------+-----+-------+
-|        node         |status | avail |ring |pending|
-+---------------------+-------+-------+-----+-------+
-|     riak@10.0.1.202 |joining|  up   |  0.0|  --   |
-|     riak@10.0.1.225 |joining|  up   |  0.0|  --   |
-|     riak@10.0.1.39  |joining|  up   |  0.0|  --   |
-|     riak@10.0.1.67  |joining|  up   |  0.0|  --   |
-| (C) riak@10.0.1.195 | valid |  up   |100.0|  --   |
-+---------------------+-------+-------+-----+-------+
-
++---------------------+------+-------+-----+-------+
+|        node         |status| avail |ring |pending|
++---------------------+------+-------+-----+-------+
+| (C) riak@10.0.1.195 |valid |  up   | 23.4|  20.3 |
+|     riak@10.0.1.202 |valid |  up   | 18.8|  20.3 |
+|     riak@10.0.1.225 |valid |  up   | 20.3|  20.3 |
+|     riak@10.0.1.39  |valid |  up   | 20.3|  20.3 |
+|     riak@10.0.1.67  |valid |  up   | 17.2|  18.8 |
++---------------------+------+-------+-----+-------+
 ```
-**Step 3: Insert data into Riak cluster**
-- Insert data into database
-    
-	curl -v -XPUT http://10.0.1.195:8098/buckets/bucket/keys/key1?returnbody=true -d '{"foo":"bar"}'
 
-	curl -v -XPUT http://10.0.1.202:8098/buckets/bucket/keys/key1?returnbody=true -d '{"foo":"bar"}'
+**Step 3: Insert data into Riak cluster**
+```
+- Insert data into database
+
+	Create a bucket name restaurant
+	curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
+
+	Insert data into restaurant bucket
+	curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -d '{"Burger King":"San Jose"}'
+
+	Check whether the data is inserted or not
+	curl http://10.0.1.195:8098/buckets/restaurant/keys/key1
+
+	Check all the keys
+	curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
 
 - Accessing data from database
-    curl -i http://10.0.1.195:8098/buckets/bucket/keys/key1
+    curl http://10.0.1.195:8098/buckets/restaurant/keys/key1
 
-	Always change the hostname according to the npde IP. If running on member 1 then set the IP of member 1
+Always change the hostname according to the npde IP. If running on member 1 then set the IP of member 1- like this curl http://10.0.1.202:8098/buckets/restaurant/keys/key1
+```
+
+
+## Test Cases for Riak AP testing
+Below are the test cases created for the Consistency of MongoDB during Partition Tolerance
+
+## Test 1 : Replication Test
+
+  **Test Plan-** All Member nodes should be able to replicate the data inserted into one node 
+
+  **Expected Outcome-** Should be able to query member nodes and be able to read data
+
+  **Actual Outcome-** Able to read the data from all member node showing that replication from is working properly.
+
+  **Test Exceution-**
+
+1. Insert data into coordinator
+curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key2?returnbody=true -d '{"Five Guys":"Santa Clara"}'
+
+2. See all keys
+	curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
+
+2. On every member node check whether the data is replicated
+	curl http://10.0.1.202:8098/buckets/restaurant/keys/key2
+	curl http://10.0.1.39:8098/buckets/restaurant/keys/key2
+	curl http://10.0.1.225:8098/buckets/restaurant/keys/key2
+	curl http://10.0.1.67:8098/buckets/restaurant/keys/key2
+
+**Test Result-** 
+
+Image-
+
+
+
+## Test 2 : Update the data in a key
+
+  **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
+
+  **Expected Outcome-** Secondary node should be up to date with primary
+
+  **Actual Outcome-** Able to read the data from secondary node showing that replication from Master to slave is working properly.
+
+  **Test Exceution-**
+
+
+  **Test Result-** 
+
+  Image- 
+
+## Test 3 Testing stale data read after Network Partition
+
+  **Test Plan-** Make a network partition by disconnecting a member node from all other nodes. 
+
+  **Expected Outcome-** When a member node is disconnected then that disconnected node will have stale data and we should be able to read it.
+
+  **Actual Outcome-** Able to read stale data from the member disconneced node. Inserted a new data in primary and other secondary nodes got updated but the one which was disconnected gives the stale data to read.
+
+  **Test Exceution-**
+
+1. Go to any of your member node Ec2 instance and execute the below commands to disconnect that node from the other nodes (Here I am disconnecting member2)
+
+	```
+	DROP connection
+		# drop ipaddress
+		sudo iptables -A INPUT -s 10.0.1.195  -j DROP
+		sudo iptables -A INPUT -s 10.0.1.39  -j DROP
+		sudo iptables -A INPUT -s 10.0.1.225  -j DROP
+		sudo iptables -A INPUT -s 10.0.1.67  -j DROP
+		
+		sudo iptables -L  // to list the rules
+	```
+
+2. Then update some data that you have already inserted in your RIAK cluster
+
+curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key3?returnbody=true -d '{"Me Burger":"Seattle"}'
+
+//I am updating the place to Seattle which was earlier San Francisco
+
+
+check keys-
+curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true  //I have 3 keys now
+
+3. Now check the newly inserted key 3 in all members
+
+	curl http://10.0.1.202:8098/buckets/restaurant/keys/key3   //getting San Francisco
+
+	curl http://10.0.1.39:8098/buckets/restaurant/keys/key3		//getting Seattle
+
+	curl http://10.0.1.225:8098/buckets/restaurant/keys/key3	//getting Seattle
+
+	curl http://10.0.1.67:8098/buckets/restaurant/keys/key3		//getting Seattle
+
+	For all other connected nodes you will get the key3 updated but for disconnected node you will get old value.
+
+Test Result-** 
+
+	​Image-
+	
+## Test 4: Partition Recovery
+
+  **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**.
+
+  **Expected Outcome-** When primary node is disconnected then the new primary must be elected from the other secondary nodes
+
+  **Actual Outcome-** New Primary node is elected from the other secondary nodes and the previous primary node is now secondary.
+
+  **Test Exceution-**
+
+1. Recover your node by connecting it to all
+	```
+	sudo iptables -D INPUT -s 10.0.1.195  -j DROP
+	sudo iptables -D INPUT -s 10.0.1.225  -j DROP
+	sudo iptables -D INPUT -s 10.0.1.39  -j DROP
+	sudo iptables -D INPUT -s 10.0.1.67  -j DROP
+	```
+ 2. Check for Key4 we inserted earlier to see that is it now avaialble
+
+	curl  http://10.0.1.202:8098/buckets/restaurant/keys/key4
+
+	//Its availble now and we are getting key4 value now
+
+Delete- curl -XDELETE http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -d '{"Burger King":"San Jose"}'
+
+  **Test Result-** 
+
+  Image- 
+
 
 ## Challenges
 
 None Faced
 
 ## Mistakes
+
+None
