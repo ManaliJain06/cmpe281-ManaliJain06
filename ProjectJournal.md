@@ -924,9 +924,7 @@ Totals
  Shard shard2 contains 44.48% data, 50% docs in cluster, avg obj size on shard : 407B
  
  Image for Shard disribution for 10 Bios Collection - 
- ShardDistributionFor_10BiosDocuments
- 
- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
  
  Detailed screenshots of all the cluster setup is attached in the MongoDB-Sharding folder on below link-
  https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding
