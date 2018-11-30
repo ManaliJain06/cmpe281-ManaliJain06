@@ -563,6 +563,8 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 Sharding steps
 Avaialabe at- https://www.linode.com/docs/databases/mongodb/build-database-clusters-with-mongodb/
 
+Sharding Architecture- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/Shard_Architecture.png
+
 Preconfiguration before performing sharding
 
 1. With your previous mongodb AMI created launch 9 more EC2 instances.
@@ -880,7 +882,7 @@ mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
 	sh.shardCollection( "cmpe281DB.bios", { "_id" : "hashed" } )
 
-	insert one document from BIOS collection
+	insert two document from BIOS collection
 	db.bios.insert({
 	    "name" : {
 		"first" : "Guido",
@@ -902,12 +904,43 @@ mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 		    "by" : "NLUUG"
 		}
 	    ]  })
+	    
+	    db.bios.insert({
+		    "name" : {
+			"first" : "Kristen",
+			"last" : "Nygaard"
+		    },
+		    "birth" : ISODate("1926-08-27T04:00:00Z"),
+		    "death" : ISODate("2002-08-10T04:00:00Z"),
+		    "contribs" : [
+			"OOP",
+			"Simula"
+		    ],
+		    "awards" : [
+			{
+			    "award" : "Rosing Prize",
+			    "year" : 1999,
+			    "by" : "Norwegian Data Association"
+			},
+			{
+			    "award" : "Turing Award",
+			    "year" : 2001,
+			    "by" : "ACM"
+			},
+			{
+			    "award" : "IEEE John von Neumann Medal",
+			    "year" : 2001,
+			    "by" : "IEEE"
+			}
+		]} )
 
-	//insert more data in your collection and the data will get shard
+	//insert more data in your collection and the data will get shard.
+	
+Check the shard distribution by-
 
-	db.bios.getShardDistribution() // this will give you the sharding distribution\
+db.bios.getShardDistribution() 
 
-Output be like-
+Output will be like-
 Shard shard1 at shard1/mongo-shardA1:27017,mongo-shardA2:27017,mongo-shardA3:27017
  data : 508B docs : 1 chunks : 2
  estimated data per chunk : 254B
@@ -922,14 +955,13 @@ Totals
  data : 915B docs : 2 chunks : 4
  Shard shard1 contains 55.51% data, 50% docs in cluster, avg obj size on shard : 508B
  Shard shard2 contains 44.48% data, 50% docs in cluster, avg obj size on shard : 407B
- 
+```
  Image for Shard disribution for 10 Bios Collection - 
-https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
+ https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
  
  Detailed screenshots of all the cluster setup is attached in the MongoDB-Sharding folder on below link-
- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding
+ https://github.com/nguyensjsu/cmpe281-ManaliJain06/tree/master/MongoDB-Sharding
  
-```
 
 ## Mistakes
 1) No such process on starting mongos
