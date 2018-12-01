@@ -365,7 +365,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
 1. do rs.status() to see which node is primary 
 
-2. Excecute the command ```mongo``` in your primary node EC2 instance and insert some data in your burger database.
+2. Excecute the command ```mongo -u admin -p cmpe281 --authenticationDatabase admin``` in your primary node EC2 instance and insert some data in your burger database.
 
    ```
    db.restaurant.insert({"id": "1","restaurantName": "Burger Place","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"king@gmail.com"});
@@ -377,18 +377,15 @@ Below are the test cases created for the Consistency of MongoDB during Partition
    db.restaurant.find({}).pretty()
    ```
 
-   **Test Result-** 
+**Test Result-** 
 
-   Image-
-   * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
-   * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png
+Image-
+* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
+* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png
 
+## Test 2 : Test updating data
 
-
-
-## Test 2 : API test reading and updating data
-
-  **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
+  **Test Plan-** Update the data in primary and see whether secondary is getting the updated data.
 
   **Expected Outcome-** Secondary node should be up to date with primary
 
@@ -396,7 +393,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   **Test Exceution-**
 
-   1. In your primary mongodb node execute the command ```mongo```
+   1. In your primary mongodb node execute the command ```mongo -u admin -p cmpe281 --authenticationDatabase admin```
 
    2. Insert more data into your primary.
 
@@ -404,7 +401,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
       db.restaurant.insert({"id": "2","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
       ```
 
-   3. Excecute the command ```mongo``` in your all secondary nodes EC2 instance and insert some data in your burger database
+   3. Excecute the command ```mongo -u admin -p cmpe281 --authenticationDatabase admin``` in your all secondary nodes EC2 instance and insert some data in your burger database
 
       You should be able to see both the records being inserted.
 
@@ -417,11 +414,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test2_Result.png
 
-
-
-
-
-## Test 3 Made a partition by disconnecting a secondary node i.e. node 2 with private IP 10.0.1.73 from all other nodes and read stale data
+## Test 3 Made a partition by disconnecting a secondary node i.e. node2 with private IP 10.0.1.73 from all other nodes and read stale data
 
   **Test Plan-** Make a partition tolerance by disconnecting one node(secondary) and observing behavioiur. 
 
@@ -442,13 +435,13 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 		sudo iptables -A INPUT -s 10.0.3.191 -j DROP
 	```
 
-2. Then insert some data in your primary node
+2. Then update some data in your primary node
 
 	```
-	db.restaurant.insert({"id": "3","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+	db.restaurant.updateOne({"id": "1","restaurantName": "GO Burger","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"goto@gmail.com"});
 	```
 
-3. The login into your disconnected secondary and you will see that we are getting the stale records    and not the currenlty updated one.
+3. Login into your disconnected secondary and you will see that we are getting the stale records and not the currenlty updated one.
 
 	```
 	db.restaurant.find({}).pretty()
@@ -460,13 +453,11 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 	db.restaurant.find({}).pretty()
 	```
 
-	**Test Result-** 
+**Test Result-** 
 
-	​Image-
-	* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
-	* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
-
-
+​Image-
+* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
+* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
 
 ## Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances
 
@@ -478,33 +469,38 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   **Test Exceution-**
 
-  1. Go to your primary node Ec2 instance and execute the below commands to disconnect that node from the other secondary nodes.
+  1. Connect back your secondary again -
+	```
+		sudo iptables -D INPUT -s 10.0.1.163 -j DROP
+		sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+		sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+		sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+	```
+  1. Go to your primary node Ec2 instance and execute the below commands to disconnect primary node from the other secondary nodes.
 
-		```
-		#Disconnecting primary from other 3 secondary
-		
-			sudo iptables -A INPUT -s 10.0.1.109 -j DROP
-			sudo iptables -A INPUT -s 10.0.3.107 -j DROP
-			sudo iptables -A INPUT -s 10.0.3.191 -j DROP
-		```
+	```
+	Disconnecting primary from other 3 secondary
+		sudo iptables -A INPUT -s 10.0.1.73 -j DROP
+		sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+		sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+		sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+	```
 
   2. Then do ```rs.status()``` and you will see that the node has error message as disconnected as it is disconnected from the netowork
 
   3. Do ```rs.status()``` in any of the secondary node and you will see that a new primary is elected which was earlier secondary.
 
-  4. You can again connect the disconnecterd nodes by below commands
+  4. You can again connect the disconnected nodes by below commands
+	```
+	sudo iptables -D INPUT -s 10.0.1.73 -j DROP
+	sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+	sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+	sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+    ```
 
-     ```
-		sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-		sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-		sudo iptables -D INPUT -s 10.0.3.191 -j DROP
-     ```
+**Test Result-** 
 
-
-
-  **Test Result-** 
-
-  Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
+Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
 
 
 ## Test 5 Stop Primary mongodb to show leader selection and recovery
@@ -522,6 +518,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
   1. Go to the node that you disconnected in the Test4 and run below commands to connect it back to the network.
 
      ```
+	 sudo iptables -D INPUT -s 10.0.1.73 -j DROP
      sudo iptables -D INPUT -s 10.0.1.109 -j DROP
      sudo iptables -D INPUT -s 10.0.3.107 -j DROP
      sudo iptables -D INPUT -s 10.0.3.191 -j DROP
@@ -535,11 +532,9 @@ Below are the test cases created for the Consistency of MongoDB during Partition
      db.restaurant.find({}).pretty()
      ```
 
-
-
 ## Challenges
 
-1) MongoDB was not allowing to read from secondary nodes when you do ```db.restaurant.find({}).pretty()``` and giving error as ''not master and slaveOk=false"
+1) MongoDB was not allowing to read from secondary nodes when you do ```db.restaurant.find({}).pretty()``` and giving error as "not master and slaveOk=false"
 
 **Solution**- use this command ```rs.slaveOk()``` to set tell mongo shell that you want to read from the secondary nodes and are allowing reads.
 
