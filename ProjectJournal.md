@@ -438,7 +438,9 @@ Image-
 2. Then update some data in your primary node
 
 	```
-	db.restaurant.updateOne({"id": "1","restaurantName": "GO Burger","zipcode":"950012","phone":"669-456-7675","address":"34 Green Ave","email":"goto@gmail.com"});
+	db.restaurant.update(
+   { "id": "1" },
+   { $set: { "restaurantName": "GO Burger" } })
 	```
 
 3. Login into your disconnected secondary and you will see that we are getting the stale records and not the currenlty updated one.
