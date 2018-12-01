@@ -398,7 +398,7 @@ Image-
    2. Insert more data into your primary.
 
       ```
-      db.restaurant.insert({"id": "2","restaurantName": "GO Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
+      db.restaurant.insert({"id": "2","restaurantName": "Zip Burger","zipcode":"950030","phone":"408-456-7675","address":"101 Oak Ave","email":"goto@gmail.com"});
       ```
 
    3. Excecute the command ```mongo -u admin -p cmpe281 --authenticationDatabase admin``` in your all secondary nodes EC2 instance and insert some data in your burger database
@@ -420,7 +420,7 @@ Image-
 
   **Expected Outcome-** When secondary node is disconnected then that disconnected node will have stale data and we should be able to read it
 
-  **Actual Outcome-** Able to read stale data from the secondary disconneced node. Inserted a new data in primary and other secondary nodes got updated but the one which was disconnected gives the stale data to read.
+  **Actual Outcome-** Able to read stale data from the secondary disconneced node. Updated data in primary and other secondary nodes got updated but the one which was disconnected gives the stale data to read.
 
   **Test Exceution-**
 
@@ -454,13 +454,6 @@ Image-
 	```
 	db.restaurant.find({}).pretty()
 	```
-5. Connect the secondary again
-	```
-	sudo iptables -D INPUT -s 10.0.1.163 -j DROP
-	sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-	sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-	sudo iptables -D INPUT -s 10.0.3.191 -j DROP
-	```
 
 **Test Result-** 
 
@@ -468,87 +461,83 @@ Image-
 * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
 * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
 
-## Test 4: Connect the secondary (node2) again and then disconnect the primary from the other 3 secondary mongodb instances
+## Test 4: Connect the secondary (node2) again and check partition recovery
 
-  **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**.
+  **Test Plan-** Connect Secondary node again to observe partition recovery.
 
-  **Expected Outcome-** When primary node is disconnected then the new primary must be elected from the other secondary nodes
+  **Expected Outcome-** When secondary node is connected again then we will see that the secondary node is updated witht the latest data
 
-  **Actual Outcome-** New Primary node is elected from the other secondary nodes and the previous primary node is now secondary.
+  **Actual Outcome-** Secondary node is eventually consistent and partition recovery is done.
 
   **Test Exceution-**
 
   1. Connect back your secondary again -
-	```
-		sudo iptables -D INPUT -s 10.0.1.163 -j DROP
-		sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-		sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-		sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+```
+sudo iptables -D INPUT -s 10.0.1.163 -j DROP
+sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+sudo iptables -D INPUT -s 10.0.3.191 -j DROP
 
-		check the list by-
-		sudo iptables -L
-	```
-  1. Go to your primary node Ec2 instance and execute the below commands to disconnect primary node from the other secondary nodes.
+check the list by-
+sudo iptables -L
+```
+ 2. Login to the mongo shell of the secondary you just connected again and run below query
+	```db.restaurant.find({}).pretty()```
 
-	```
-	Disconnecting primary from other 3 secondary
-		sudo iptables -A INPUT -s 10.0.1.73 -j DROP
-		sudo iptables -A INPUT -s 10.0.1.109 -j DROP
-		sudo iptables -A INPUT -s 10.0.3.107 -j DROP
-		sudo iptables -A INPUT -s 10.0.3.191 -j DROP
-	```
-
-  2. Then do ```rs.status()``` and you will see that the node has error message as disconnected as it is disconnected from the netowork
-
-  3. Do ```rs.status()``` in any of the secondary node and you will see that a new primary is elected which was earlier secondary.
-
-  4. You can again connect the disconnected nodes by below commands
-	```
-	sudo iptables -D INPUT -s 10.0.1.73 -j DROP
-	sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-	sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-	sudo iptables -D INPUT -s 10.0.3.191 -j DROP
-    ```
+	You will see that the data is upated from the previous test
 
 **Test Result-** 
 
 Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
 
+## Test 5 Disconnect the primary from the other secondary mongodb instances to test Leader Election
 
-## Test 5 Stop Primary mongodb to show leader selection and recovery
+  **Test Plan-** Observer Leader Election
 
-  This test is in continuation of the Test4
+  **Expected Outcome-** After the primary is disconnected from all nodes then a new leader should be selected.
 
-  **Test Plan-** Observer **partition recovery**
-
-  **Expected Outcome-** When the disconnected node is connected again then it will try to sync up with the network and get the new records or changes being done during partition tolerance
-
-  **Actual Outcome-** Node after connection is working as per other secondary nodes with latest recrords being udpdated.
+  **Actual Outcome-** Leader election is taking place with Secondary4 node elected as new Primary Node.
 
   **Test Exceution-**
 
-  1. Go to the node that you disconnected in the Test4 and run below commands to connect it back to the network.
+1. Go to your primary node Ec2 instance and execute the below commands to disconnect primary node from the other secondary nodes.
+```
+Disconnecting primary from other 4 secondary nodes
+	sudo iptables -A INPUT -s 10.0.1.73 -j DROP
+	sudo iptables -A INPUT -s 10.0.1.109 -j DROP
+	sudo iptables -A INPUT -s 10.0.3.107 -j DROP
+	sudo iptables -A INPUT -s 10.0.3.191 -j DROP
+```
+ 2. Then do ```rs.status()``` and you will see that the node has error message as disconnected as it is disconnected from the netowork
 
-     ```
-	 sudo iptables -D INPUT -s 10.0.1.73 -j DROP
-     sudo iptables -D INPUT -s 10.0.1.109 -j DROP
-     sudo iptables -D INPUT -s 10.0.3.107 -j DROP
-     sudo iptables -D INPUT -s 10.0.3.191 -j DROP
-     ```
+3. Do ```rs.status()``` in any of the secondary node and you will see that a new primary is elected which was earlier secondary.
 
-  2. Then do ```rs.status``` and see that the node is live again the network and sending heartbeats
+4. The disonnected primary will now become a secondary node
 
-  3. Run the below commands in Mongo shell to see the upadted records being fetched.
+**Test Result-** 
 
-     ```
-     db.restaurant.find({}).pretty()
-     ```
+Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test5_Result.png
+
 
 ## Challenges
 
 1) MongoDB was not allowing to read from secondary nodes when you do ```db.restaurant.find({}).pretty()``` and giving error as "not master and slaveOk=false"
 
 **Solution**- use this command ```rs.slaveOk()``` to set tell mongo shell that you want to read from the secondary nodes and are allowing reads.
+
+# Assignment Questions for CP
+1. How does the system function during normal mode (i.e. no partition)
+- During normal mode the system works fine i.e. it is allowing insertion of data and replicating it to all the nodes. In Mongo you can write only on master as slaves are for read. Insert/update/delete on master was wroking fine and is replicating to slaves
+
+2. What happens to the nodes during a partition? 
+- When the partion happens the disconnected node that was avaialble for read. As slaves are not available for writes in mongo we were having consistency in the data because no new records are getting inserted or updates are done on the disconnected node.
+
+3. Can stale data be read from a node during a partition?
+- Yes, stale data can be read from the node during partition. The new data that is inserted into master is not getting replicated after partiton but we can read the data before partition.
+
+4. What happens to the system during partition recovery?
+- During partiton recovery the system was getting eventually consistent with the updated data from the master. The new documents added to the master are getting replicated and the node is getting eventually consistent.
+
 
 
 
@@ -641,7 +630,10 @@ change the configuration parameters by
 	3) Sharding
 		clusterRole: "configsvr"
 
-Restart your monogdb instance by - 
+Enable mongod service-
+	sudo systemctl enable mongos.service
+
+Restart your monogdb instance by -
 	sudo systemctl restart mongod
 	sudo systemctl status mongod
 ```
@@ -680,7 +672,7 @@ VPC:             cmpe281
 Network:         public subnet (us-west-1c)
 Auto Public IP:  enable
 Security Group:  mongodb-cluster
-SG Open Ports:   22, 27017-27019, 80, 443
+SG Open Ports:   22, 27017-27019
 Key Pair:        cmpe281-us-west-1
 ```
 **Step 2- Configure host file with IP of each instances**
@@ -702,7 +694,7 @@ change the host file- sudo vi /etc/hosts
 1) Download mongodb
 sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
 
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-	org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb.list
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb.list
 
 sudo apt update
 sudo apt install mongodb-org
@@ -775,7 +767,7 @@ sudo systemctl enable mongos.service
 
 9) Restart Mongos to apply our changes
 sudo systemctl start mongos
-systemctl status mongos
+sudo systemctl status mongos
 sudo systemctl stop mongos
 
 when successfully run then it will give the output as- 
@@ -1132,60 +1124,53 @@ Ring ready: true
 	Check all the keys
 	curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
 
+	Delete a key
+	curl -XDELETE http://10.0.1.195:8098/buckets/restaurant/keys/key1
+
 - Accessing data from database
     curl http://10.0.1.195:8098/buckets/restaurant/keys/key1
 
-Always change the hostname according to the npde IP. If running on member 1 then set the IP of member 1- like this curl http://10.0.1.202:8098/buckets/restaurant/keys/key1
+Always change the hostname according to the node IP. If running on member1 then set the IP of member1 - like this curl http://10.0.1.202:8098/buckets/restaurant/keys/key1
 ```
-
-
 ## Test Cases for Riak AP testing
 Below are the test cases created for the Consistency of MongoDB during Partition Tolerance
 
 ## Test 1 : Replication Test
 
-  **Test Plan-** All Member nodes should be able to replicate the data inserted into one node 
+  **Test Plan-** All Member nodes should be able to replicate the data inserted into one node
 
   **Expected Outcome-** Should be able to query member nodes and be able to read data
 
-  **Actual Outcome-** Able to read the data from all member node showing that replication from is working properly.
+  **Actual Outcome-** Able to read the data from all member node showing that replication is working properly.
 
   **Test Exceution-**
+1. Create bucket by 
+curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
 
-1. Insert data into coordinator
-curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key2?returnbody=true -d '{"Five Guys":"Santa Clara"}'
+2. Insert data into coordinator
+curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -d '{"Five Guys":"Santa Clara"}'
 
-2. See all keys
+3. To see all keys
 	curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
 
-2. On every member node check whether the data is replicated
-	curl http://10.0.1.202:8098/buckets/restaurant/keys/key2
-	curl http://10.0.1.39:8098/buckets/restaurant/keys/key2
-	curl http://10.0.1.225:8098/buckets/restaurant/keys/key2
-	curl http://10.0.1.67:8098/buckets/restaurant/keys/key2
+4. On every member node check whether the data is replicated
+
+	curl http://10.0.1.195:8098/buckets/restaurant/keys/key1
+
+	curl http://10.0.1.202:8098/buckets/restaurant/keys/key1
+
+	curl http://10.0.1.39:8098/buckets/restaurant/keys/key1
+
+	curl http://10.0.1.225:8098/buckets/restaurant/keys/key1
+
+	curl http://10.0.1.67:8098/buckets/restaurant/keys/key1
 
 **Test Result-** 
 
 Image-
+* 
 
-
-
-## Test 2 : Update the data in a key
-
-  **Test Plan-** Update the data in primary and see whether secondary is getting the updated data. 
-
-  **Expected Outcome-** Secondary node should be up to date with primary
-
-  **Actual Outcome-** Able to read the data from secondary node showing that replication from Master to slave is working properly.
-
-  **Test Exceution-**
-
-
-  **Test Result-** 
-
-  Image- 
-
-## Test 3 Testing stale data read after Network Partition
+## Test 2 Testing stale data read after Network Partition
 
   **Test Plan-** Make a network partition by disconnecting a member node from all other nodes. 
 
@@ -1195,52 +1180,60 @@ Image-
 
   **Test Exceution-**
 
-1. Go to any of your member node Ec2 instance and execute the below commands to disconnect that node from the other nodes (Here I am disconnecting member2)
+1. Go to any of your member node and execute the below commands to disconnect that node from the other nodes (Here I am disconnecting member2)
 
 	```
 	DROP connection
-		# drop ipaddress
-		sudo iptables -A INPUT -s 10.0.1.195  -j DROP
-		sudo iptables -A INPUT -s 10.0.1.39  -j DROP
-		sudo iptables -A INPUT -s 10.0.1.225  -j DROP
-		sudo iptables -A INPUT -s 10.0.1.67  -j DROP
 		
-		sudo iptables -L  // to list the rules
+	sudo iptables -A INPUT -s 10.0.1.195  -j DROP
+	sudo iptables -A INPUT -s 10.0.1.39  -j DROP
+	sudo iptables -A INPUT -s 10.0.1.225  -j DROP
+	sudo iptables -A INPUT -s 10.0.1.67  -j DROP
+	
+	sudo iptables -L  // to list the rules
+
+	Check the status
+		sudo riak-admin cluster status
 	```
 
 2. Then update some data that you have already inserted in your RIAK cluster
 
-curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key3?returnbody=true -d '{"Me Burger":"Seattle"}'
+curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -d '{"Five Guys":"Seattle"}'
 
-//I am updating the place to Seattle which was earlier San Francisco
+//I am updating the place to Seattle which was earlier Santa Clara
 
+3. Now check the updaated key1 in all members
 
-check keys-
-curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true  //I have 3 keys now
+	curl http://10.0.1.202:8098/buckets/restaurant/keys/key1   //getting Santa Clara
 
-3. Now check the newly inserted key 3 in all members
+	curl http://10.0.1.39:8098/buckets/restaurant/keys/key1		//getting Seattle
 
-	curl http://10.0.1.202:8098/buckets/restaurant/keys/key3   //getting San Francisco
+	curl http://10.0.1.225:8098/buckets/restaurant/keys/key1	//getting Seattle
 
-	curl http://10.0.1.39:8098/buckets/restaurant/keys/key3		//getting Seattle
+	curl http://10.0.1.67:8098/buckets/restaurant/keys/key1		//getting Seattle
 
-	curl http://10.0.1.225:8098/buckets/restaurant/keys/key3	//getting Seattle
+	For all other connected nodes you will get the updated key1 but for disconnected node you will get old value.
 
-	curl http://10.0.1.67:8098/buckets/restaurant/keys/key3		//getting Seattle
+4. Update the key1 again in the disconnected node and we will see later that on partition recovery the key value with the latest updated timestamp is replicated. This shows that even during the partition tolerance the node is avalaile for read and write.
 
-	For all other connected nodes you will get the key3 updated but for disconnected node you will get old value.
+	In the dicsonned node changing the key value again-
+	```
+	curl -XPUT http://10.0.1.202:8098/buckets/restaurant/keys/key1?returnbody=true -d '{"Five Guys":"New York"}'
+	```
+5. You can also delete any key with the below command
+	```
+	curl -XDELETE http://10.0.1.202:8098/buckets/restaurant/keys/key1
+	```
+	**Test Result-**
 
-Test Result-** 
-
-	​Image-
+	Image-
 	
-## Test 4: Partition Recovery
+## Test 3: Testing Network Recovery
+   **Test Plan-** Reconnect the disconnected member node again and see netowrk recovery.
 
-  **Test Plan-** Make a partition tolerance by disconnecting primary node and observe **leader election**.
+  **Expected Outcome-** When member node is connected again then the data should be eventually consistent with the key value of the latest updated data.
 
-  **Expected Outcome-** When primary node is disconnected then the new primary must be elected from the other secondary nodes
-
-  **Actual Outcome-** New Primary node is elected from the other secondary nodes and the previous primary node is now secondary.
+  **Actual Outcome-** Member node is connected again and the data is getting eventually consistent with the key value of the latest updated data..
 
   **Test Exceution-**
 
@@ -1250,24 +1243,34 @@ Test Result-**
 	sudo iptables -D INPUT -s 10.0.1.225  -j DROP
 	sudo iptables -D INPUT -s 10.0.1.39  -j DROP
 	sudo iptables -D INPUT -s 10.0.1.67  -j DROP
+
+	Check the status
+		sudo riak-admin cluster status
 	```
- 2. Check for Key4 we inserted earlier to see that is it now avaialble
+ 2. Check for Key1 updated earlier we see that is it now avaialble with latest time stamp
 
-	curl  http://10.0.1.202:8098/buckets/restaurant/keys/key4
+	curl  http://10.0.1.195:8098/buckets/restaurant/keys/key1
 
-	//Its availble now and we are getting key4 value now
+	curl  http://10.0.1.202:8098/buckets/restaurant/keys/key1
 
-Delete- curl -XDELETE http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -d '{"Burger King":"San Jose"}'
+	curl  http://10.0.1.39:8098/buckets/restaurant/keys/key1
+
+	//Its availble now and we are getting key1 value now
 
   **Test Result-** 
 
   Image- 
+* 
 
+# Assignment Questions for AP
+1. How does the system function during normal mode (i.e. no partition)
+- During normal mode the system works file i.e. it is allowing insertion of data and replicating it to all the nodes. In Riak you can insert/update/delete from any node and the data is replicating accross the cluster.
 
-## Challenges
+2. What happens to the nodes during a partition? 
+- When the partion happens the disconnected node that was still avaialble for read and write. However, the data that we were reading from that node is stale and inconsistent as during partition, updations on data might have been done.
 
-None Faced
+3. Can stale data be read from a node during a partition?
+- Yes, stale data can be read from the node during partition. The node is avalaible for all read/write operations.
 
-## Mistakes
-
-None
+4. What happens to the system during partition recovery?
+- During partiton recovery the system was getting eventually consistent with the updated data of the latest timestamp inserted. During partition we changed the key value on disconnected member node as well as on the coordinator node. After recovery the key value of the latest timestamp is available on all the nodes.
