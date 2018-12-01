@@ -77,7 +77,8 @@ Sarding stratergy
 
 3) Sharding server- The shard cluster where the data is stored
 
-
+**Mongo Replication Design**
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Monogodb_CP_architecture.png
 
 **AWS Mongo Setup**
 
@@ -1017,6 +1018,8 @@ Solution- Make sure that you have given proper indentation in mongos.conf file. 
 4) Write test cases.
 
 ## Status
+**Riak Design**
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_AP_architecture.png
 
 **AWS Riak Setup**
 Available at- http://docs.basho.com/riak/kv/2.2.3/setup/installing/amazon-web-services/
@@ -1168,7 +1171,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 **Test Result-** 
 
 Image-
-* 
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test1_Result.png
 
 ## Test 2 Testing stale data read after Network Partition
 
@@ -1226,7 +1229,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 	```
 	**Test Result-**
 
-	Image-
+	Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test2_Result.png
 	
 ## Test 3: Testing Network Recovery
    **Test Plan-** Reconnect the disconnected member node again and see netowrk recovery.
@@ -1260,7 +1263,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
   **Test Result-** 
 
   Image- 
-* 
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test3_Result.png
 
 # Assignment Questions for AP
 1. How does the system function during normal mode (i.e. no partition)
