@@ -90,7 +90,7 @@ Instance Type:   t2.micro
 VPC:             cmpe281
 Network:         private subnet (us-west-1c)
 Auto Public IP:  disable
-Security Group:  mongodb-cluster 
+Security Group:  mongodb-cluster (22, 27017)
 SG Open Ports:   22, 27017
 Key Pair:        cmpe281-us-west-1
 ```
@@ -104,7 +104,7 @@ Instance Type:   t2.micro
 VPC:             cmpe281
 Network:         public subnet (us-west-1c)
 Auto Public IP:  Enable
-Security Group:  jumbox-security-group
+Security Group:  jumbox-security-group (22)
 SG Open Ports:   22
 Key Pair:        cmpe281-us-west-1
 ```
@@ -228,7 +228,7 @@ Now that as we have our Mongo setup for one node is done we will create other No
 	VPC:             cmpe281
 	Network:         private subnet (us-west-1c)
 	Auto Public IP:  disable
-	Security Group:  mongodb-cluster 
+	Security Group:  mongodb-cluster (22, 27017)
 	SG Open Ports:   22, 27017
 	Key Pair:        cmpe281-us-west-1
 
@@ -237,7 +237,7 @@ Now that as we have our Mongo setup for one node is done we will create other No
 	VPC:             cmpe281
 	Network:         private subnet (us-west-1a)
 	Auto Public IP:  disable
-	Security Group:  mongodb-cluster 
+	Security Group:  mongodb-cluster (22, 27017)
 	SG Open Ports:   22, 27017
 	Key Pair:        cmpe281-us-west-1
 ```
