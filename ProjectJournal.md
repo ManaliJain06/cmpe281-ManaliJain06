@@ -454,6 +454,13 @@ Image-
 	```
 	db.restaurant.find({}).pretty()
 	```
+5. Connect the secondary again
+	```
+	sudo iptables -D INPUT -s 10.0.1.163 -j DROP
+	sudo iptables -D INPUT -s 10.0.1.109 -j DROP
+	sudo iptables -D INPUT -s 10.0.3.107 -j DROP
+	sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+	```
 
 **Test Result-** 
 
@@ -477,6 +484,9 @@ Image-
 		sudo iptables -D INPUT -s 10.0.1.109 -j DROP
 		sudo iptables -D INPUT -s 10.0.3.107 -j DROP
 		sudo iptables -D INPUT -s 10.0.3.191 -j DROP
+
+		check the list by-
+		sudo iptables -L
 	```
   1. Go to your primary node Ec2 instance and execute the below commands to disconnect primary node from the other secondary nodes.
 
