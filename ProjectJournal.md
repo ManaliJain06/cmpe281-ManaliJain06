@@ -78,7 +78,7 @@ Sarding stratergy
 3) Sharding server- The shard cluster where the data is stored
 
 **Mongo Replication Design**
-https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Monogodb_CP_architecture.png
+![https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Monogodb_CP_architecture.png]
 
 **AWS Mongo Setup**
 
