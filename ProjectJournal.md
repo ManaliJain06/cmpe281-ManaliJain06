@@ -82,7 +82,7 @@ Sarding stratergy
 3) Sharding server- The shard cluster where the data is stored
 
 **Mongo Replication Design**
-![https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Monogodb_CP_architecture.png]
+![MongoDB design](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Monogodb_CP_architecture.png)
 
 **AWS Mongo Setup**
 
@@ -195,7 +195,7 @@ sudo vi /etc/mongod.conf
 
 None faced
 
-## Mistakes
+## Mistakes encountered
 
 1) Mongo shell was not not running - When you do mongo after installing and starting mongodb, then it gives an error - Connection Refused.
 
@@ -311,11 +311,11 @@ rs.initiate( {
 
 None Faced
 
-## Mistakes
+## Mistakes encountered
 
 1. Hostname is not getting set in the /etc/hosts file
 
-	**Solution**- I fixed this problem by doing reboot on the instense
+**Solution**- I fixed this problem by doing reboot on the instense
 
 2.  Replicas initiation was giving error as connection refused
 
@@ -382,11 +382,10 @@ Below are the test cases created for the Consistency of MongoDB during Partition
    db.restaurant.find({}).pretty()
    ```
 
-**Test Result-**
+  **Test Result-**
+![MongoDB test1 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png)
 
-Image-
-* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
-* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png
+![MongoDB test1 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(2).png)
 
 ## Test 2 : Test updating data
 
@@ -414,10 +413,8 @@ Image-
       db.restaurant.find({}).pretty()
       ```
 
-
   **Test Result-**
-
-  Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test2_Result.png
+  ![MongoDB test2 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test2_Result.png)
 
 ## Test 3 Made a partition by disconnecting a secondary node i.e. node2 with private IP 10.0.1.73 from all other nodes and read stale data
 
@@ -461,10 +458,8 @@ Image-
 	```
 
 **Test Result-**
-
-​Image-
-* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
-* https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png
+![MongoDB test3 Partition Tolerance](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png)
+![MongoDB test3 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_Result.png)
 
 ## Test 4: Connect the secondary (node2) again and check partition recovery
 
@@ -492,8 +487,7 @@ sudo iptables -L
 	You will see that the data is upated from the previous test
 
 **Test Result-**
-
-Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
+![MongoDB test4 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png)
 
 ## Test 5 Disconnect the primary from the other secondary mongodb instances to test Leader Election
 
@@ -520,8 +514,7 @@ Disconnecting primary from other 4 secondary nodes
 4. The disonnected primary will now become a secondary node
 
 **Test Result-**
-
-Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test5_Result.png
+![MongoDB test5 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test5_Result.png)
 
 
 ## Challenges
@@ -561,12 +554,12 @@ Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshot
 
 ## Status
 
-Sharding steps
+**Sharding steps**
 Avaialabe at- https://www.linode.com/docs/databases/mongodb/build-database-clusters-with-mongodb/
 
-Sharding Architecture- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/Shard_Architecture.png
+**Sharding Architecture** - ![MongoDB Sharding Design](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/Shard_Architecture.png)
 
-Preconfiguration before performing sharding
+**Preconfiguration before performing sharding**
 
 1. With your previous mongodb AMI created launch 9 more EC2 instances.
 ```
@@ -961,9 +954,9 @@ Totals
  Shard shard2 contains 44.48% data, 50% docs in cluster, avg obj size on shard : 407B
 ```
  Image for Shard disribution for 10 Bios Collection -
- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
+ ![MongoDB Sharidng distributionb for 10 Bios documents](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png)
 
- Detailed screenshots of all the cluster setup is attached in the MongoDB-Sharding folder on below link-
+ Detailed screenshots of all the cluster setup is attached in the pdf in MongoDB-Sharding folder on below link-
  https://github.com/nguyensjsu/cmpe281-ManaliJain06/tree/master/MongoDB-Sharding
 
 
@@ -1023,7 +1016,7 @@ Solution- Make sure that you have given proper indentation in mongos.conf file. 
 
 ## Status
 **Riak Design**
-https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_AP_architecture.png
+![Riak Design](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_AP_architecture.png)
 
 **AWS Riak Setup**
 Available at- http://docs.basho.com/riak/kv/2.2.3/setup/installing/amazon-web-services/
@@ -1173,9 +1166,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 	curl http://10.0.1.67:8098/buckets/restaurant/keys/key1
 
 **Test Result-**
-
-Image-
-https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test1_Result.png
+![Riak test1 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test1_Result.png)
 
 ## Test 2 Testing stale data read after Network Partition
 
@@ -1232,8 +1223,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 	curl -XDELETE http://10.0.1.202:8098/buckets/restaurant/keys/key1
 	```
 **Test Result-**
-
-Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test2_Result.png
+![Riak test2 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test2_Result.png)
 
 ## Test 3: Testing Network Recovery
    **Test Plan-** Reconnect the disconnected member node again and see netowrk recovery.
@@ -1265,9 +1255,7 @@ Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshot
 	//Its availble now and we are getting key1 value now
 
   **Test Result-**
-
-  Image-
-https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test3_Result.png
+![Riak test3 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test3_Result.png)
 
 # Assignment Questions for AP
 1. How does the system function during normal mode (i.e. no partition)
