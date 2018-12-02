@@ -20,7 +20,7 @@ References link-
 - Selection of the databases for testing partition tolerance
 - Design of the project.
 - AWS EC2 configuration to host Go API and test our partition tolerance.
-- Testing partition tolerance and system behaviour 
+- Testing partition tolerance and system behaviour
 - Demonstrating AP and CP peoperties of the database
 - Sharing of MongoDB database
 
@@ -32,7 +32,7 @@ References link-
 2) Getting to know AP and CP databases and select databases for testing
 
 ## Status
-1) CAP theorm- It states that it is Impossible for a distributed system to achieve Consistency, availability and partition tolerance all at the same time. A distributed system can only achieve either consistency or availability during network partition tolerance. 
+1) CAP theorm- It states that it is Impossible for a distributed system to achieve Consistency, availability and partition tolerance all at the same time. A distributed system can only achieve either consistency or availability during network partition tolerance.
 
 2) My project NoSQL database selection
 
@@ -81,7 +81,8 @@ Sarding stratergy
 
 3) Sharding server- The shard cluster where the data is stored
 
-
+**Mongo Replication Design**
+![https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Monogodb_CP_architecture.png]
 
 **AWS Mongo Setup**
 
@@ -144,21 +145,21 @@ sudo chmod 0600 /opt/mongodb/keyFile
 
 5) Config mongod.conf
 sudo vi /etc/mongod.conf
-	
-	a) remove or comment out bindIp: 127.0.0.1. 
-	Replace with bindIp: 0.0.0.0 (binds on all ips) 
+
+	a) remove or comment out bindIp: 127.0.0.1.
+	Replace with bindIp: 0.0.0.0 (binds on all ips)
 
 	network interfaces
 	net:
 		port: 27017
 		bindIp: 0.0.0.0
-	
+
 	b) Uncomment security section & add key file
 	Make Make sure there is two spaces in front of KeyFile
-	
+
 	security:
 		keyFile: /opt/mongodb/keyFile
-	
+
 	c) Uncomment Replication section. Name Replica Set = cmpe281
 	Make Make sure there is two spaces in front of replSetName
 
@@ -192,13 +193,13 @@ sudo vi /etc/mongod.conf
 
 ## Challenges
 
-None faced 
+None faced
 
 ## Mistakes
 
 1) Mongo shell was not not running - When you do mongo after installing and starting mongodb, then it gives an error - Connection Refused.
 
-**Solution**- 
+**Solution**-
 
 * Check whether your mongod service is up or not by - ```sudo service mongod status ``` If the service is up and running it will give actively running
 
@@ -211,7 +212,7 @@ None faced
 
 ## Plan
 
-1) To do replication on the Mongo cluster by following the design 
+1) To do replication on the Mongo cluster by following the design
 
 2) Research about Riak for AP configuration
 
@@ -276,7 +277,7 @@ rs.initiate( {
 })
 ```
 
-**Step 8: Insert data into the mongo using primary** 
+**Step 8: Insert data into the mongo using primary**
 
 ```
 1) Create user
@@ -297,7 +298,7 @@ rs.initiate( {
 
 2) Login to Primary as Admin:
 	mongo -u admin -p cmpe281 --authenticationDatabase admin
-	
+
 	#Create database burger and collection restaurant
 	use burger;
 
@@ -318,7 +319,7 @@ None Faced
 
 2.  Replicas initiation was giving error as connection refused
 
-	I was getting the below error while initiating the replica set for mongodb​	
+	I was getting the below error while initiating the replica set for mongodb​
 
 ```
 	rs.initiate( {
@@ -336,7 +337,7 @@ None Faced
 		"errmsg" : "replSetInitiate quorum check failed because not all proposed set members responded affirmatively: secondary1:27017 failed with Error connecting to secondary1:27017 (10.0.1.73:27017) :: caused by :: Connection refused, secondary2:27017 failed with Error connecting to secondary2:27017 (10.0.1.109:27017) :: caused by :: Connection refused, secondary3:27017 failed with Error connecting to secondary3:27017 (10.0.3.191:27017) :: caused by :: Connection refused, secondary4:27017 failed with Error connecting to secondary4:27017 (10.0.3.107:27017) :: caused by :: Connection refused",
 		"code" : 74,
 		"codeName" : "NodeNotFound"
-	}	
+	}
 ```
 
 **Solution**- Jumpbox into each of your MongoDB instances(i.e primary and all secondary) and make sure that all instances have mongodb service up.
@@ -359,7 +360,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
 ## Test 1 : Replication Test
 
-  **Test Plan-** Secondary nodes should be able to replicate the data inserted into primary node 
+  **Test Plan-** Secondary nodes should be able to replicate the data inserted into primary node
 
   **Expected Outcome-** Should be able to query secondary nodes and be able to read data from secondary
 
@@ -367,7 +368,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
 
   **Test Exceution-**
 
-1. do rs.status() to see which node is primary 
+1. do rs.status() to see which node is primary
 
 2. Excecute the command ```mongo -u admin -p cmpe281 --authenticationDatabase admin``` in your primary node EC2 instance and insert some data in your burger database.
 
@@ -381,7 +382,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
    db.restaurant.find({}).pretty()
    ```
 
-**Test Result-** 
+**Test Result-**
 
 Image-
 * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test1_Result(1).png
@@ -414,13 +415,13 @@ Image-
       ```
 
 
-  **Test Result-** 
+  **Test Result-**
 
   Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test2_Result.png
 
 ## Test 3 Made a partition by disconnecting a secondary node i.e. node2 with private IP 10.0.1.73 from all other nodes and read stale data
 
-  **Test Plan-** Make a partition tolerance by disconnecting one node(secondary) and observing behavioiur. 
+  **Test Plan-** Make a partition tolerance by disconnecting one node(secondary) and observing behavioiur.
 
   **Expected Outcome-** When secondary node is disconnected then that disconnected node will have stale data and we should be able to read it
 
@@ -459,7 +460,7 @@ Image-
 	db.restaurant.find({}).pretty()
 	```
 
-**Test Result-** 
+**Test Result-**
 
 ​Image-
 * https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test3_PartitionTolerance.png
@@ -490,7 +491,7 @@ sudo iptables -L
 
 	You will see that the data is upated from the previous test
 
-**Test Result-** 
+**Test Result-**
 
 Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test4_Result.png
 
@@ -518,7 +519,7 @@ Disconnecting primary from other 4 secondary nodes
 
 4. The disonnected primary will now become a secondary node
 
-**Test Result-** 
+**Test Result-**
 
 Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test5_Result.png
 
@@ -533,7 +534,7 @@ Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshot
 1. How does the system function during normal mode (i.e. no partition)
 - During normal mode the system works fine i.e. it is allowing insertion of data and replicating it to all the nodes. In Mongo you can write only on master as slaves are for read. Insert/update/delete on master was wroking fine and is replicating to slaves
 
-2. What happens to the nodes during a partition? 
+2. What happens to the nodes during a partition?
 - When the partion happens the disconnected node that was avaialble for read. As slaves are not available for writes in mongo we were having consistency in the data because no new records are getting inserted or updates are done on the disconnected node.
 
 3. Can stale data be read from a node during a partition?
@@ -583,7 +584,7 @@ Key Pair:        cmpe281-us-west-1
 3. 3 of them will be our Configuration servers, 3 will be sharding cluster1 and other 3 will be sharding cluster2. So name them accordingly.
 4. In each of your EC2 instances change the host file and set the hostname with private IP of your instances.
 sudo vi /etc/hosts  
-``` 
+```
 <private IP> node/instance name
 like this-
 10.0.0.182 mongo-config1
@@ -623,11 +624,11 @@ sudo systemctl enable mongod.service
 For each of the config server ubuntu instance do the following
 change the configuration parameters by
    	sudo vi /etc/mongod.conf
-   	   
+
 	1) net:
 		port: 27019
 		bindIp: <private IP of your instance> e.g. 10.0.0.182
-	
+
 	2) replication
 		replSetname: configReplica
 
@@ -652,17 +653,17 @@ mongo mongo-config1:27019 -u mongo-admin -p --authenticationDatabase admin
 
 - Inititalize replica set
 
-rs.initiate( 
+rs.initiate(
 	{_id: "configReplica",
 	configsvr: true,
-	members: [ 
+	members: [
 		{ _id: 0, host: "mongo-config1:27019" },
 		{ _id: 1, host: "mongo-config2:27019" },
-		{ _id: 2, host: "mongo-config3:27019" } ] 
+		{ _id: 2, host: "mongo-config3:27019" } ]
 	} )
 
-- you will get- configReplica:PRIMARY> 
-                configReplica:SECONDARY> like this 
+- you will get- configReplica:PRIMARY>
+                configReplica:SECONDARY> like this
 ```
 # 2. Setting up Query Router (Mongos)
 
@@ -713,7 +714,7 @@ sudo chmod 0600 /opt/mongodb/keyFile
 
 3) Config mongos.conf
 sudo vi /etc/mongos.conf
-	
+
 		# where to write logging data.
 		systemLog:
 		  destination: file
@@ -774,7 +775,7 @@ sudo systemctl start mongos
 sudo systemctl status mongos
 sudo systemctl stop mongos
 
-when successfully run then it will give the output as- 
+when successfully run then it will give the output as-
 ● mongos.service - Mongo Cluster Router
    Loaded: loaded (/lib/systemd/system/mongos.service; enabled; vendor preset: enabled)
    Active: active (running) since Thu 2018-11-22 08:05:17 UTC; 3s ago
@@ -840,24 +841,24 @@ mongo mongo-shardA1:27017 -u mongo-admin -p --authenticationDatabase admin
 enter password that you set earlier
 
 For Cluster 1
-rs.initiate( { 
-	_id: "shard1", 
-	members: [ 
+rs.initiate( {
+	_id: "shard1",
+	members: [
 		{ _id: 0, host: "mongo-shardA1:27017" },
 		{ _id: 1, host: "mongo-shardA2:27017" },
-		{ _id: 2, host: "mongo-shardA3:27017" } ] 
+		{ _id: 2, host: "mongo-shardA3:27017" } ]
 	} )
 
 For Cluster 2
 
 mongo mongo-shardB1:27017 -u mongo-admin -p --authenticationDatabase admin
 
-rs.initiate( { 
-	_id: "shard2", 
-	members: [ 
+rs.initiate( {
+	_id: "shard2",
+	members: [
 		{ _id: 0, host: "mongo-shardB1:27017" },
 		{ _id: 1, host: "mongo-shardB2:27017" },
-		{ _id: 2, host: "mongo-shardB3:27017" } ] 
+		{ _id: 2, host: "mongo-shardB3:27017" } ]
 	} )
 ```
 **Step 3- Adding shards to our clusters - SHARDING STEPS**
@@ -907,7 +908,7 @@ mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 		    "by" : "NLUUG"
 		}
 	    ]  })
-	    
+
 	    db.bios.insert({
 		    "name" : {
 			"first" : "Kristen",
@@ -938,10 +939,10 @@ mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 		]} )
 
 	//insert more data in your collection and the data will get shard.
-	
+
 Check the shard distribution by-
 
-db.bios.getShardDistribution() 
+db.bios.getShardDistribution()
 
 Output will be like-
 Shard shard1 at shard1/mongo-shardA1:27017,mongo-shardA2:27017,mongo-shardA3:27017
@@ -959,12 +960,12 @@ Totals
  Shard shard1 contains 55.51% data, 50% docs in cluster, avg obj size on shard : 508B
  Shard shard2 contains 44.48% data, 50% docs in cluster, avg obj size on shard : 407B
 ```
- Image for Shard disribution for 10 Bios Collection - 
+ Image for Shard disribution for 10 Bios Collection -
  https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png
- 
+
  Detailed screenshots of all the cluster setup is attached in the MongoDB-Sharding folder on below link-
  https://github.com/nguyensjsu/cmpe281-ManaliJain06/tree/master/MongoDB-Sharding
- 
+
 
 ## Mistakes
 1) No such process on starting mongos
@@ -1021,6 +1022,8 @@ Solution- Make sure that you have given proper indentation in mongos.conf file. 
 4) Write test cases.
 
 ## Status
+**Riak Design**
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_AP_architecture.png
 
 **AWS Riak Setup**
 Available at- http://docs.basho.com/riak/kv/2.2.3/setup/installing/amazon-web-services/
@@ -1045,7 +1048,7 @@ Key Pair:        cmpe281-us-west-1
 - Set min and max port in riak.conf
 	cd /etc/riak
 	sudo vi riak.conf
-	
+
 	erlang.distribution.port_range.minimum = 6000
 	erlang.distribution.port_range.maximum = 7999
 
@@ -1148,7 +1151,7 @@ Below are the test cases created for the Consistency of MongoDB during Partition
   **Actual Outcome-** Able to read the data from all member node showing that replication is working properly.
 
   **Test Exceution-**
-1. Create bucket by 
+1. Create bucket by
 curl  http://10.0.1.195:8098/buckets/restaurant/keys?keys=true
 
 2. Insert data into coordinator
@@ -1169,18 +1172,18 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 
 	curl http://10.0.1.67:8098/buckets/restaurant/keys/key1
 
-**Test Result-** 
+**Test Result-**
 
 Image-
-* 
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test1_Result.png
 
 ## Test 2 Testing stale data read after Network Partition
 
-  **Test Plan-** Make a network partition by disconnecting a member node from all other nodes. 
+  **Test Plan-** Make a network partition by disconnecting a member node from all other nodes.
 
   **Expected Outcome-** When a member node is disconnected then that disconnected node will have stale data and we should be able to read it.
 
-  **Actual Outcome-** Able to read stale data from the member disconneced node. Inserted a new data in primary and other secondary nodes got updated but the one which was disconnected gives the stale data to read.
+  **Actual Outcome-** Able to read stale data from the member disconnected node. Inserted a new data in primary and other secondary nodes got updated but the one which was disconnected gives the stale data to read.
 
   **Test Exceution-**
 
@@ -1188,12 +1191,12 @@ Image-
 
 	```
 	DROP connection
-		
+
 	sudo iptables -A INPUT -s 10.0.1.195  -j DROP
 	sudo iptables -A INPUT -s 10.0.1.39  -j DROP
 	sudo iptables -A INPUT -s 10.0.1.225  -j DROP
 	sudo iptables -A INPUT -s 10.0.1.67  -j DROP
-	
+
 	sudo iptables -L  // to list the rules
 
 	Check the status
@@ -1230,7 +1233,8 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 	```
 **Test Result-**
 
-	
+Image- https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test2_Result.png
+
 ## Test 3: Testing Network Recovery
    **Test Plan-** Reconnect the disconnected member node again and see netowrk recovery.
 
@@ -1260,14 +1264,16 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 
 	//Its availble now and we are getting key1 value now
 
-  **Test Result-** 
+  **Test Result-**
 
+  Image-
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_Test3_Result.png
 
 # Assignment Questions for AP
 1. How does the system function during normal mode (i.e. no partition)
 - During normal mode the system works file i.e. it is allowing insertion of data and replicating it to all the nodes. In Riak you can insert/update/delete from any node and the data is replicating accross the cluster.
 
-2. What happens to the nodes during a partition? 
+2. What happens to the nodes during a partition?
 - When the partion happens the disconnected node that was still avaialble for read and write. However, the data that we were reading from that node is stale and inconsistent as during partition, updations on data might have been done.
 
 3. Can stale data be read from a node during a partition?
@@ -1371,12 +1377,12 @@ VpcId - vpc-0e69bfbf33bf1046e
 SubnetId - subnet-061a96394001c00c0,subnet-09cfadc3366abd9b3,subnet-088ec3226bfbc1684
 ```
 **Step7 Installing aws-iam-authenticator for EKS**
-1. Download the binary from 
+1. Download the binary from
 
 MacOS: https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/darwin/amd64/aws-iam-authenticator
 
 2. Adding it to the path
-``` 
+```
 chmod +x ./aws-iam-authenticator
 cd ~ -> mkdir bin -> mkdir aws-iam-authenticator
 cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator
@@ -1428,7 +1434,7 @@ Output-
 check status by-
 aws eks describe-cluster --name eksCluster --query cluster.status
 
-Output- 
+Output-
 Active
 ```
 **Step9 Configure kubectl for Amazon EKS**
@@ -1553,7 +1559,3 @@ get BurgerPlace
 ## Mistakes
 1) Check the version of aws cli. It should be 1.16 or above. If it's less then try updating your python version.
 2) While creating Worker Node you should correclty ender the node ID based on region.
-
-
-
-
