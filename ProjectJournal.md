@@ -517,7 +517,7 @@ Disconnecting primary from other 4 secondary nodes
 ![MongoDB test5 Result](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_Test5_Result.png)
 
 
-## Challenges
+## Mistakes encountered
 
 1) MongoDB was not allowing to read from secondary nodes when you do ```db.restaurant.find({}).pretty()``` and giving error as "not master and slaveOk=false"
 
@@ -525,18 +525,16 @@ Disconnecting primary from other 4 secondary nodes
 
 # Assignment Questions for CP
 1. How does the system function during normal mode (i.e. no partition)
-- During normal mode the system works fine i.e. it is allowing insertion of data and replicating it to all the nodes. In Mongo you can write only on master as slaves are for read. Insert/update/delete on master was wroking fine and is replicating to slaves
+- During normal mode the system works fine i.e. it is allowing insertion of data and replicating it to all the nodes. In Mongo you can write only on master as slaves are for read. Insert/update/delete on master was wroking fine and is replicating to slaves.
 
 2. What happens to the nodes during a partition?
-- When the partion happens the disconnected node that was avaialble for read. As slaves are not available for writes in mongo we were having consistency in the data because no new records are getting inserted or updates are done on the disconnected node.
+- When the partion happens the disconnected node was avaialble for read. As slaves are not available for writes in mongo we were having consistency in the data because no new records are getting inserted or updated on the disconnected node.
 
 3. Can stale data be read from a node during a partition?
-- Yes, stale data can be read from the node during partition. The new data that is inserted into master is not getting replicated after partiton but we can read the data before partition.
+- Yes, stale data can be read from the node during partition. The new data that is inserted into master after partiton is not getting replicated on the disconnected node but the data before partition was readable.
 
 4. What happens to the system during partition recovery?
-- During partiton recovery the system was getting eventually consistent with the updated data from the master. The new documents added to the master are getting replicated and the node is getting eventually consistent.
-
-
+- During partiton recovery the system was getting eventually consistent with the updated data from the master. The new documents added to the master are getting replicated on the reconnected node.
 
 
 # Week 5 (11/04/2018) to (11/10/2018)
@@ -804,7 +802,7 @@ sudo systemctl enable mongod.service
 ```
 **Step 2- Shard Replicas setupConfigure mongod.conf in each of your sharding replicas**
 ```
-We have two sharding cluster with 3 EC2 isnstances in each one of them.
+We have two sharding cluster with 3 EC2 instances in each one of them.
 
 For each shard cluster do the below steps- (make note of changing replSetname of instances according to the cluster)
 
@@ -960,7 +958,7 @@ Totals
  https://github.com/nguyensjsu/cmpe281-ManaliJain06/tree/master/MongoDB-Sharding
 
 
-## Mistakes
+## Mistakes encountered
 1) No such process on starting mongos
 ```
 ubuntu@ip-10-0-0-110:~$ sudo systemctl start mongos
@@ -1262,13 +1260,13 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 - During normal mode the system works file i.e. it is allowing insertion of data and replicating it to all the nodes. In Riak you can insert/update/delete from any node and the data is replicating accross the cluster.
 
 2. What happens to the nodes during a partition?
-- When the partion happens the disconnected node that was still avaialble for read and write. However, the data that we were reading from that node is stale and inconsistent as during partition, updations on data might have been done.
+- When the partion happens the disconnected node was still avaialble for read and write. However, the data that we were reading from that node is stale and inconsistent as during partition, updations on data might have been done.
 
 3. Can stale data be read from a node during a partition?
 - Yes, stale data can be read from the node during partition. The node is avalaible for all read/write operations.
 
 4. What happens to the system during partition recovery?
-- During partiton recovery the system was getting eventually consistent with the updated data of the latest timestamp inserted. During partition we changed the key value on disconnected member node as well as on the coordinator node. After recovery the key value of the latest timestamp is available on all the nodes.
+- During partiton recovery the system was getting eventually consistent with the updated data of the latest timestamp. During partition we changed the key value on disconnected member node as well as on the coordinator node. After partition recovery the key value of the latest timestamp is available on all the nodes.
 
 # Week 7 (11/18/2018) to (11/24/2018)
 **Kubernetes Week [WOW Factor]**
@@ -1378,10 +1376,12 @@ export PATH=$HOME/bin/aws-iam-authenticator:$PATH
 echo 'export PATH=$HOME/bin/aws-iam-authenticator:$PATH' >> ~/.bash_profile
 aws-iam-authenticator help
 ```
+![EKS VPC cluster](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/VPC_Cluster.png)
+
 **Step8 Installing awscli for configuring user and EKS cluster creation**
 1. Install aws cli
 
-```brew install awscli```
+	```brew install awscli```
 
 2. Configuring aws
 ```
@@ -1425,6 +1425,8 @@ aws eks describe-cluster --name eksCluster --query cluster.status
 Output-
 Active
 ```
+![EKS Cluster creation](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/eks_cluster.png)
+
 **Step9 Configure kubectl for Amazon EKS**
 1. View your aws cli identity
 ```aws sts get-caller-identity ```
@@ -1432,6 +1434,8 @@ Active
 2. Update your kubeconfig ```aws eks update-kubeconfig --name eksCluster```
 
 3. Test your configuration ```kubectl get svc```
+
+![Kubectl configuration](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/kubectl_config.png)
 
 **Step10 Configure Amazon EKS Worker Nodes**
 1. Download the pem file from the region that you have already selected for EKS. Here we are using oregon.
@@ -1506,6 +1510,11 @@ kubectl get services -o wide
 This will give you External IP for your Guidebook. With the IP you can access the Guestbook on port 3000
 http://a0a6ac68df5c311e8bbb006e936d175a-175315281.us-west-2.elb.amazonaws.com:3000
 
+![GuestBook configuration](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/guestbook_configuration.png)
+
+**Detailed steps with screenshot is in the pdf file on below link-**
+
+
 **Step12 Test NoSQL database redis for replication**
 
 ## Test redis
@@ -1539,11 +1548,19 @@ redis-cli
 get keys
 get BurgerPlace
 ```
+4. Exec redis master shell to delete data
+```
+kubectl exec -it redis-slave-9t2zh  -- /bin/bash
+redis-cli
+del FiveGuys
+```
 ## Test Results
-! [Test Insertion to master] ()
-! [Test Reading from Slave] ()
-! [Test Deleting from Master] ()
+Redis database is working as expected on the Amazon EKS (Elastic container service for Kubernetes). When we insert data into the master then the slave is replicating the data. We are not allowed to do update opreations on the slave node which preserves data consistency.
 
-## Mistakes
+![Test Insertion to master](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/RedisMasterInsertion.png)
+![Test Reading from Slave (Repliation)](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/RedisSlaveRead.png)
+![Test Deleting from Master](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/RedisDeletion.png)
+
+## Mistakes encountered
 1) Check the version of aws cli. It should be 1.16 or above. If it's less then try updating your python version.
 2) While creating Worker Node you should correclty ender the node ID based on region.
