@@ -1210,7 +1210,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 
 	For all other connected nodes you will get the updated key1 but for disconnected node you will get old value.
 
-4. Update the key1 again in the disconnected node and we will see later that on partition recovery the key value with the latest updated timestamp is replicated. This shows that even during the partition tolerance the node is avalaile for read and write.
+4. Update the key1 again in the disconnected node and we will see later that on partition recovery the key value with the latest updated data is replicated. This shows that even during the partition tolerance the node is avalaile for read and write.
 
 	In the dicsonned node changing the key value again-
 	```
@@ -1266,7 +1266,7 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 - Yes, stale data can be read from the node during partition. The node is avalaible for all read/write operations.
 
 4. What happens to the system during partition recovery?
-- During partiton recovery the system was getting eventually consistent with the updated data of the latest timestamp. During partition we changed the key value on disconnected member node as well as on the coordinator node. After partition recovery the key value of the latest timestamp is available on all the nodes.
+- During partiton recovery the system was getting eventually consistent with the updated data of the latest data. During partition we changed the key value on disconnected member node as well as on the coordinator node. After partition recovery the key value of the latest data is available on all the nodes.
 
 # Week 7 (11/18/2018) to (11/24/2018)
 **Kubernetes Week [WOW Factor]**
