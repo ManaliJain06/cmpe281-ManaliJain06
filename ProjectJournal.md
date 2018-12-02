@@ -1272,12 +1272,11 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 **Kubernetes Week [WOW Factor]**
 
 ## Plan
-1. To use Amazon EKS for using Kubernetes in cloud and demonstrating repliation in a NoSQL database
-2. Setting up Amazon EKS and decide the design of the system in terms of number of pods and database to use
+1. To use Amazon EKS for using Kubernetes in cloud and demonstrating repliation in a NoSQL database.
+2. Setting up Amazon EKS and decide the design of the system in terms of number of pods and database to use.
 
 ## Status
 Database used for testing our kubernetes cluster is - Redis
-Design of the system-
 
 **AmazonEKS setup**
 
@@ -1337,9 +1336,9 @@ We create this policy for restricting the calls to our kubernetes cluster and la
 1. Go to IAM console -> Choose Group -> Create group -> Group name- AWS_EKSGroup_281
 2. Attach below policies
 	AmazonEKSClusterPolicy
-    AmazonEKSWorkerNodePolicy
-    AmazonEKSServicePolicy
-    AmazonEKS_CNI_Policy
+    	AmazonEKSWorkerNodePolicy
+    	AmazonEKSServicePolicy
+    	AmazonEKS_CNI_Policy
 	AmazonEKSAdminPolicy_281
 	AmazonEKSPassRole_281
 
@@ -1467,7 +1466,7 @@ NodeSecurityGroup - sg-0ff60ddb9523851a7
 Download AWS authenticator configuration map
 curl -O https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/aws-auth-cm.yaml
 
-Open this file and replace rolearn wiht the NodeInstanceRole value you get earlier.
+Open this file and replace rolearn with the NodeInstanceRole value you get earlier.
 ```
 7. Apply the configuration changes
 ```kubectl apply -f aws-auth-cm.yaml```
@@ -1539,13 +1538,13 @@ Slave 1
 
 kubectl exec -it redis-slave-9t2zh  -- /bin/bash
 redis-cli
-get keys
 get FiveGuys
+get BurgerPlace
 
 Slave 2
 kubectl exec -it redis-slave-tgqvn  -- /bin/bash
 redis-cli
-get keys
+get FiveGuys
 get BurgerPlace
 ```
 4. Exec redis master shell to delete data
