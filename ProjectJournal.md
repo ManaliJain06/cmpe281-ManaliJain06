@@ -8,6 +8,10 @@ References link-
 3) https://www.annashipman.co.uk/jfdi/the-cap-theorem-and-mongodb.html
 4) https://www.simplilearn.com/replication-and-sharding-mongodb-tutorial-video
 5) https://docs.mongodb.com/manual/core/sharding-shard-key/
+6) https://docs.aws.amazon.com/eks/latest/userguide/what-is-eks.html
+7) https://docs.aws.amazon.com/eks/latest/userguide/getting-started.html
+8) https://docs.aws.amazon.com/eks/latest/userguide/EKS_IAM_user_policies.html
+
 
 # Agenda-
 
@@ -1224,9 +1228,8 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 	```
 	curl -XDELETE http://10.0.1.202:8098/buckets/restaurant/keys/key1
 	```
-	**Test Result-**
+**Test Result-**
 
-	Image-
 	
 ## Test 3: Testing Network Recovery
    **Test Plan-** Reconnect the disconnected member node again and see netowrk recovery.
@@ -1259,8 +1262,6 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 
   **Test Result-** 
 
-  Image- 
-* 
 
 # Assignment Questions for AP
 1. How does the system function during normal mode (i.e. no partition)
@@ -1274,3 +1275,285 @@ curl -XPUT http://10.0.1.195:8098/buckets/restaurant/keys/key1?returnbody=true -
 
 4. What happens to the system during partition recovery?
 - During partiton recovery the system was getting eventually consistent with the updated data of the latest timestamp inserted. During partition we changed the key value on disconnected member node as well as on the coordinator node. After recovery the key value of the latest timestamp is available on all the nodes.
+
+# Week 7 (11/18/2018) to (11/24/2018)
+**Kubernetes Week [WOW Factor]**
+
+## Plan
+1. To use Amazon EKS for using Kubernetes in cloud and demonstrating repliation in a NoSQL database
+2. Setting up Amazon EKS and decide the design of the system in terms of number of pods and database to use
+
+## Status
+Database used for testing our kubernetes cluster is - Redis
+Design of the system-
+
+**AmazonEKS setup**
+
+Amazon EKS is integrated with other services of Amazon such as ELB, IAM and VPC. We will be setting up these to configure EKS.
+
+Setting up EKS on Amazon steps is as follows
+
+**Step1 Creating Amazon EKS service role**
+
+1. Open IAM console- https://console.aws.amazon.com/iam/ and login
+2. Choose Roles -> Create role
+3. Then EKS -> Allows Amazon EKS to manage your clusters on your behalf -> Next: Permissions -> Next: Tags -> Next: Review
+4. Enter Role name -> eksServiceRole_281 -> Create Role
+
+**Step2 Creating Policies for the role we created above**
+We create this policy for restricting the calls to our kubernetes cluster and later will attach the role with it
+1. Open the IAM console at https://console.aws.amazon.com/iam/ and login
+2. Choose Policies -> Create policies
+3. In the JSON tab add this below JSON
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "eks:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
+4. Give name to policy- AmazonEKSAdminPolicy_281 -> Create Policy
+5. Go to policy again -> Create Policy -> In JSON tab add our Role ARN to be able to access EKS cluster from your host
+```
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": "arn:aws:iam::326071200148:role/eksServiceRole_281"
+        }
+    ]
+}
+```
+6. Give name to policy- AmazonEKSPassRole_281 -> Create Policy
+
+**Step3 Attach policies to role**
+1. In you IAM console -> Choose role (eksServiceRole_281)
+2. Attach policies- AmazonEKSAdminPolicy_281, AmazonEKSPassRole_281
+
+**Step4 Creating a group to attach to the user**
+1. Go to IAM console -> Choose Group -> Create group -> Group name- AWS_EKSGroup_281
+2. Attach below policies
+	AmazonEKSClusterPolicy
+    AmazonEKSWorkerNodePolicy
+    AmazonEKSServicePolicy
+    AmazonEKS_CNI_Policy
+	AmazonEKSAdminPolicy_281
+	AmazonEKSPassRole_281
+
+**Step5 Creating User**
+1. Go to IAM console -> Choose User -> Add user -> User name- AWS_EKSUser_281
+2. Go add Group created previously -> AWS_EKSGroup_281 -> next Tags -> review -> done
+
+**Step6 Creating VPC cluster**
+1. Go to AWS CloudFormation console at https://console.aws.amazon.com/cloudformation.
+2. Select region- US West (Oregon) (us-west-2) as it supports EKS
+3. Choose Create Stack -> Specify an Amazon S3 template URL -> enter this - https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/amazon-eks-vpc-sample.yaml
+4. Specify Details -> then Create
+```
+Stack Name- CMPE281-EKS-VPC
+Rest default
+```
+5. Wait for your VPC to get created -> then select the VPC -> Go to Output tag
+```
+Security Group - sg-061411acb61b3ec60
+VpcId - vpc-0e69bfbf33bf1046e
+SubnetId - subnet-061a96394001c00c0,subnet-09cfadc3366abd9b3,subnet-088ec3226bfbc1684
+```
+**Step7 Installing aws-iam-authenticator for EKS**
+1. Download the binary from 
+
+MacOS: https://amazon-eks.s3-us-west-2.amazonaws.com/1.10.3/2018-07-26/bin/darwin/amd64/aws-iam-authenticator
+
+2. Adding it to the path
+``` 
+chmod +x ./aws-iam-authenticator
+cd ~ -> mkdir bin -> mkdir aws-iam-authenticator
+cp ./aws-iam-authenticator $HOME/bin/aws-iam-authenticator
+export PATH=$HOME/bin/aws-iam-authenticator:$PATH
+echo 'export PATH=$HOME/bin/aws-iam-authenticator:$PATH' >> ~/.bash_profile
+aws-iam-authenticator help
+```
+**Step8 Installing awscli for configuring user and EKS cluster creation**
+1. Install aws cli
+
+```brew install awscli```
+
+2. Configuring aws
+```
+aws configure
+AWS Access Key ID [None]: AKIAJ3OAN73JKDVHORTQ
+AWS Secret Access Key [None]: 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
+Default region name [None]: us-west-2
+Default output format [None]:
+
+Create CLuster-
+aws eks create-cluster --name eksCluster --role-arn arn:aws:iam::326071200148:role/eksServiceRole_281 --resources-vpc-config subnetIds=subnet-061a96394001c00c0,subnet-09cfadc3366abd9b3,subnet-088ec3226bfbc1684,securityGroupIds=sg-061411acb61b3ec60
+
+Output-
+{
+    "cluster": {
+        "name": "eksCluster",
+        "arn": "arn:aws:eks:us-west-2:326071200148:cluster/eksCluster",
+        "createdAt": 1543700693.297,
+        "version": "1.10",
+        "roleArn": "arn:aws:iam::326071200148:role/eksServiceRole_281",
+        "resourcesVpcConfig": {
+            "subnetIds": [
+                "subnet-061a96394001c00c0",
+                "subnet-09cfadc3366abd9b3",
+                "subnet-088ec3226bfbc1684"
+            ],
+            "securityGroupIds": [
+                "sg-061411acb61b3ec60"
+            ],
+            "vpcId": "vpc-0e69bfbf33bf1046e"
+        },
+        "status": "CREATING",
+        "certificateAuthority": {},
+        "platformVersion": "eks.2"
+    }
+}
+
+check status by-
+aws eks describe-cluster --name eksCluster --query cluster.status
+
+Output- 
+Active
+```
+**Step9 Configure kubectl for Amazon EKS**
+1. View your aws cli identity
+```aws sts get-caller-identity ```
+
+2. Update your kubeconfig ```aws eks update-kubeconfig --name eksCluster```
+
+3. Test your configuration ```kubectl get svc```
+
+**Step10 Configure Amazon EKS Worker Nodes**
+1. Download the pem file from the region that you have already selected for EKS. Here we are using oregon.
+
+1. Go to https://console.aws.amazon.com/cloudformation
+
+2. Select region- US West (Oregon) (us-west-2) as it supports EKS
+3. Choose Create Stack -> Specify an Amazon S3 template URL -> enter this - https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/amazon-eks-nodegroup.yaml
+4. Specify Details -> then Create
+```
+Stack Name- CMPE281-EKS-WorkerNode
+Cluster Name- eksCluster   // enter your eks cluster name created earlier
+ClusterControlPlaneSecurityGroup - Your VPC security group
+NodeGroupName- Give any name (CMPE281-EKS-WorkerNodeGroup)
+NodeAutoScalingGroupMinSize-1
+NodeAutoScalingGroupMaxSize-3
+NodeInstanceType-t2.small
+NodeImageId- ami-0f54a2f7d2e9c88b3 (this is specific for oregon)
+KeyName- Your key file of the region
+VpcId- your VPC id
+Subnet- Your subet of the VPC
+```
+5. Record the NodeInstanceRole for the node group
+NodeInstanceRole - arn:aws:iam::326071200148:role/CMPE281-EKS-WorkerNode-NodeInstanceRole-1HYLG1EQZMF0R
+NodeSecurityGroup - sg-0ff60ddb9523851a7
+
+6. Enable worker nodes to join your cluster
+```
+Download AWS authenticator configuration map
+curl -O https://amazon-eks.s3-us-west-2.amazonaws.com/cloudformation/2018-11-07/aws-auth-cm.yaml
+
+Open this file and replace rolearn wiht the NodeInstanceRole value you get earlier.
+```
+7. Apply the configuration changes
+```kubectl apply -f aws-auth-cm.yaml```
+
+**Step11 create your guest book application**
+This is used for testing the cluster we created earlier
+1. Creating Redis Master Replication Controller
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/v1.10.3/examples/guestbook-go/redis-master-controller.json
+```
+2. Creating Redis Master Service.
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/v1.10.3/examples/guestbook-go/redis-master-service.json
+```
+
+3. Creating Redis Slave Replication controller.
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/v1.10.3/examples/guestbook-go/redis-slave-controller.json
+```
+
+4. Create Redis Slave Service.
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/v1.10.3/examples/guestbook-go/redis-slave-service.json
+```
+
+5. Creating Guestbook Replication Controller.
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/v1.10.3/examples/guestbook-go/guestbook-controller.json
+```
+
+6. Create the guestbook service.
+```
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/v1.10.3/examples/guestbook-go/guestbook-service.json
+```
+
+7. Query the services in your cluster and wait until the External IP column for the guestbook service is populated.
+```
+kubectl get services -o wide
+```
+This will give you External IP for your Guidebook. With the IP you can access the Guestbook on port 3000
+http://a0a6ac68df5c311e8bbb006e936d175a-175315281.us-west-2.elb.amazonaws.com:3000
+
+**Step12 Test NoSQL database redis for replication**
+
+## Test redis
+1. Get your Kubernetes running pods
+```
+kubectl get pods
+kubectl get services -o wide
+```
+2. Exec redis master shell to write data - take the pod name and exec into it
+```
+kubectl exec -it redis-master-5mhgm -- /bin/bash
+redis-cli
+
+Query
+set FiveGuys 20
+set BurgerPlace 10
+```
+
+3. Exec redis slave shell to read data
+```
+Slave 1
+
+kubectl exec -it redis-slave-9t2zh  -- /bin/bash
+redis-cli
+get keys
+get FiveGuys
+
+Slave 2
+kubectl exec -it redis-slave-tgqvn  -- /bin/bash
+redis-cli
+get keys
+get BurgerPlace
+```
+## Test Results
+! [Test Insertion to master] ()
+! [Test Reading from Slave] ()
+! [Test Deleting from Master] ()
+
+## Mistakes
+1) Check the version of aws cli. It should be 1.16 or above. If it's less then try updating your python version.
+2) While creating Worker Node you should correclty ender the node ID based on region.
+
+
+
+
