@@ -955,7 +955,8 @@ Totals
  ![MongoDB Sharidng distributionb for 10 Bios documents](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png)
 
  Detailed screenshots of all the cluster setup is attached in the pdf in MongoDB-Sharding folder on below link-
- https://github.com/nguyensjsu/cmpe281-ManaliJain06/tree/master/MongoDB-Sharding
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/MongoDB_ShardingSteps.pdf
+
 
 
 ## Mistakes encountered
@@ -1361,6 +1362,8 @@ Security Group - sg-061411acb61b3ec60
 VpcId - vpc-0e69bfbf33bf1046e
 SubnetId - subnet-061a96394001c00c0,subnet-09cfadc3366abd9b3,subnet-088ec3226bfbc1684
 ```
+![EKS VPC cluster](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/VPC_Cluster.png)
+
 **Step7 Installing aws-iam-authenticator for EKS**
 1. Download the binary from
 
@@ -1375,7 +1378,7 @@ export PATH=$HOME/bin/aws-iam-authenticator:$PATH
 echo 'export PATH=$HOME/bin/aws-iam-authenticator:$PATH' >> ~/.bash_profile
 aws-iam-authenticator help
 ```
-![EKS VPC cluster](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/VPC_Cluster.png)
+
 
 **Step8 Installing awscli for configuring user and EKS cluster creation**
 1. Install aws cli
@@ -1470,6 +1473,7 @@ Open this file and replace rolearn with the NodeInstanceRole value you get earli
 ```
 7. Apply the configuration changes
 ```kubectl apply -f aws-auth-cm.yaml```
+![EKS Worker Node](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/EKS_Worker_Node.png)
 
 **Step11 create your guest book application**
 This is used for testing the cluster we created earlier
@@ -1512,6 +1516,7 @@ http://a0a6ac68df5c311e8bbb006e936d175a-175315281.us-west-2.elb.amazonaws.com:30
 ![GuestBook configuration](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/guestbook_configuration.png)
 
 **Detailed steps with screenshot is in the pdf file on below link-**
+https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/AmazonEKS_Steps.pdf
 
 
 **Step12 Test NoSQL database redis for replication**
