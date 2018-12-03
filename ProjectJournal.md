@@ -306,6 +306,7 @@ rs.initiate( {
 
 	db.restaurant.find({}).pretty()
 ```
+![MongoDB EC2 instances](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/MongoDB_EC2_Instances.png)
 
 ## Challenges
 
@@ -561,7 +562,7 @@ Avaialabe at- https://www.linode.com/docs/databases/mongodb/build-database-clust
 
 1. With your previous mongodb AMI created launch 9 more EC2 instances.
 ```
-Name: ConfigServer1
+Name: Give name respectively for Shards and Config servers
 AMI:             Ubuntu Server 16.04 LTS (HVM), SSD Volume Type
 Instance Type:   t2.micro
 VPC:             cmpe281
@@ -656,6 +657,8 @@ rs.initiate(
 - you will get- configReplica:PRIMARY>
                 configReplica:SECONDARY> like this
 ```
+![Config server setup](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/config-server-setup.png)
+
 # 2. Setting up Query Router (Mongos)
 
 **Step 1- Launch a new Public EC2 instance for Mongos**
@@ -778,6 +781,7 @@ when successfully run then it will give the output as-
            └─15616 /usr/bin/mongos --config /etc/mongos.conf
 
 ```
+![Mongos setup](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/query-router-setup.png)
 
 # 3. Setting up Sharding servers
 
@@ -804,7 +808,7 @@ sudo systemctl enable mongod.service
 ```
 We have two sharding cluster with 3 EC2 instances in each one of them.
 
-For each shard cluster do the below steps- (make note of changing replSetname of instances according to the cluster)
+For each shard cluster do the below steps (1-3)- (make note of changing replSetname of instances according to the cluster)
 
 1) change mongod.conf
 
@@ -827,11 +831,11 @@ sudo service mongod restart
 sudo service mongod status
 
 4) Login to mongo shell
-mongo mongo-shardA1:27017 -u mongo-admin -p --authenticationDatabase admin
 
+For Shard Cluster 1
+mongo mongo-shardA1:27017 -u mongo-admin -p --authenticationDatabase admin
 enter password that you set earlier
 
-For Cluster 1
 rs.initiate( {
 	_id: "shard1",
 	members: [
@@ -840,9 +844,10 @@ rs.initiate( {
 		{ _id: 2, host: "mongo-shardA3:27017" } ]
 	} )
 
-For Cluster 2
+For Shard Cluster 2
 
 mongo mongo-shardB1:27017 -u mongo-admin -p --authenticationDatabase admin
+enter password that you set earlier
 
 rs.initiate( {
 	_id: "shard2",
@@ -852,9 +857,13 @@ rs.initiate( {
 		{ _id: 2, host: "mongo-shardB3:27017" } ]
 	} )
 ```
+![Shard1 setup](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/shardCluster1_setup.png)
+
+![Shard2 setup](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/shardCluster2_setup.png)
+
 **Step 3- Adding shards to our clusters - SHARDING STEPS**
 ```
-1) In your query router connect to monog by-
+1) In your query router connect to mongos by-
 
 mongo mongos-query-router:27017 -u mongo-admin -p --authenticationDatabase admin
 
@@ -954,7 +963,8 @@ Totals
  Image for Shard disribution for 10 Bios Collection -
  ![MongoDB Sharidng distributionb for 10 Bios documents](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/ShardDistributionFor_10BiosDocuments.png)
 
- Detailed screenshots of all the cluster setup is attached in the pdf in MongoDB-Sharding folder on below link-
+**Detailed screenshots of all the cluster setup is attached in the pdf in MongoDB-Sharding folder on below link-**
+
 https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/MongoDB-Sharding/MongoDB_ShardingSteps.pdf
 
 
@@ -1131,6 +1141,8 @@ Ring ready: true
 
 Always change the hostname according to the node IP. If running on member1 then set the IP of member1 - like this curl http://10.0.1.202:8098/buckets/restaurant/keys/key1
 ```
+![MongoDB EC2 instances](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Screenshots/Riak_EC2_Instances.png)
+
 ## Test Cases for Riak AP testing
 Below are the test cases created for the Consistency of MongoDB during Partition Tolerance
 
@@ -1379,7 +1391,6 @@ echo 'export PATH=$HOME/bin/aws-iam-authenticator:$PATH' >> ~/.bash_profile
 aws-iam-authenticator help
 ```
 
-
 **Step8 Installing awscli for configuring user and EKS cluster creation**
 1. Install aws cli
 
@@ -1566,5 +1577,5 @@ Redis database is working as expected on the Amazon EKS (Elastic container servi
 ![Test Deleting from Master](https://github.com/nguyensjsu/cmpe281-ManaliJain06/blob/master/Kubernetes-EKS/RedisDeletion.png)
 
 ## Mistakes encountered
-1) Check the version of aws cli. It should be 1.16 or above. If it's less then try updating your python version.
+1) Check the version of aws cli. It should be 1.16 or above. If it's less then try updating your python version to 2.7.
 2) While creating Worker Node you should correclty ender the node ID based on region.
